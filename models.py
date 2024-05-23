@@ -9,7 +9,7 @@ class Supplier(models.Model):
     contact = models.CharField(max_length=100, blank=True, verbose_name=_("Contatto"))
     address = models.CharField(max_length=255, blank=True, verbose_name=_("Indirizzo"))
 
-    def __str__(self):
+    def _str_(self):
         return self.name
 
     class Meta:
@@ -21,39 +21,55 @@ class Supplier(models.Model):
 class Allergen(models.Model):
     name = models.CharField(max_length=100, verbose_name=_("Nome"))
 
-    def __str__(self):
+    def _str_(self):
         return self.name
 
     class Meta:
         verbose_name = _("Allergene")
         verbose_name_plural = _("Allergeni")
 
-
-class Item(models.Model):
+class ItemBase(models.Model):
+    UNIT_CHOICES = [
+        ('kg', 'Kilogrammi'),
+        ('unit', 'Unità'),
+        # Aggiungi altre unità di misura se necessario
+    ]
     name = models.CharField(max_length=100, verbose_name=_("Nome"))
     available_quantity = models.PositiveIntegerField(default=0, verbose_name=_("Quantità disponibile"))
+    unit = models.CharField(max_length=10, choices=UNIT_CHOICES, default='unit', verbose_name=_("Unità di misura"))
     pdv = models.ForeignKey(PDV, on_delete=models.CASCADE, verbose_name=_("PDV"))  
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, verbose_name=_("Fornitore"))
 
-    # GenericForeignKey fields
-    content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
-    object_id = models.PositiveIntegerField()
-    content_object = GenericForeignKey('content_type', 'object_id')
+    def _str_(self):
+        return f"{self.name} ({self.available_quantity} {self.get_unit_display()})"
 
-    def __str__(self):
-        return self.name
+    class Meta:
+        abstract = True
+
+
+class Item(ItemBase):
 
     class Meta:
         verbose_name = _("Articolo")
         verbose_name_plural = _("Articoli")
 
+class Ingredient(ItemBase):
+    allergens = models.ManyToManyField('Allergen', blank=True, verbose_name=_("Allergeni"))
+
+    class Meta:
+        verbose_name = _("Ingrediente")
+        verbose_name_plural = _("Ingredienti")
+
+
 
 class Preparation(models.Model):
     name = models.CharField(max_length=100, verbose_name=_("Nome"))
-    procedure = models.TextField(verbose_name=_("Procedimento"))
+    procedure = models.TextField(verbose_name=_("Procedimento"), blank=True, null=True)
     pdv = models.ForeignKey(PDV, on_delete=models.CASCADE, verbose_name=_("PDV"))
+    ingredients = models.ManyToManyField(Ingredient, through='PreparationIngredient')
 
-    def __str__(self):
+
+    def _str_(self):
         return self.name
 
     class Meta:
@@ -61,27 +77,39 @@ class Preparation(models.Model):
         verbose_name_plural = _("Preparazioni")
 
 
-class Ingredient(models.Model):
-    name = models.CharField(max_length=100, verbose_name=_("Nome"))
-    allergens = models.ManyToManyField('Allergen', blank=True, verbose_name=_("Allergeni"))
-    
-    def __str__(self):
-        return self.name
+class PreparationIngredient(models.Model):
+    preparation = models.ForeignKey(Preparation, on_delete=models.CASCADE)
+    ingredient = models.ForeignKey(Ingredient, on_delete=models.CASCADE)
+    quantity = models.CharField(max_length=50, verbose_name=_("Quantità"))
 
     class Meta:
-        verbose_name = _("Ingrediente")
-        verbose_name_plural = _("Ingredienti")
+        verbose_name = _("Quantità Ingrediente")
+        verbose_name_plural = _("Quantità Ingredienti")
 
 
 class Purchase(models.Model):
-    item = models.ForeignKey(Item, related_name='purchases', on_delete=models.CASCADE, verbose_name=_("Articolo"))
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, verbose_name=_("Fornitore"))
     unit_price = models.DecimalField(max_digits=8, decimal_places=2, verbose_name=_("Prezzo unitario"))
     quantity = models.PositiveIntegerField(verbose_name=_("Quantità"))
     purchase_date = models.DateField(verbose_name=_("Data acquisto"))
     payment_date = models.DateField(blank=True, null=True, verbose_name=_("Data pagamento"))
 
-    def __str__(self):
+    # GenericForeignKey per supportare sia Item che Ingredient
+    content_type = models.ForeignKey(
+        ContentType,
+        limit_choices_to=models.Q(app_label='inventory', model='item') | models.Q(app_label='inventory', model='ingredient'),
+        on_delete=models.CASCADE
+    )
+    object_id = models.PositiveIntegerField()
+    content_object = GenericForeignKey('content_type', 'object_id')
+
+    def save(self, *args, **kwargs):
+        if self.object_name:
+            model_class = ContentType.objects.get(model=self.object_name).model_class()
+            self.content_type = ContentType.objects.get_for_model(model_class)
+        super().save(*args, **kwargs)
+
+    def _str_(self):
         return f"Acquisto di {self.quantity} {self.item} da {self.supplier} il {self.purchase_date}"
 
     class Meta:
