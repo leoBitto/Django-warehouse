@@ -9,7 +9,7 @@ class Supplier(models.Model):
     contact = models.CharField(max_length=100, blank=True, verbose_name=_("Contatto"))
     address = models.CharField(max_length=255, blank=True, verbose_name=_("Indirizzo"))
 
-    def _str_(self):
+    def __str__(self):
         return self.name
 
     class Meta:
@@ -21,7 +21,7 @@ class Supplier(models.Model):
 class Allergen(models.Model):
     name = models.CharField(max_length=100, verbose_name=_("Nome"))
 
-    def _str_(self):
+    def __str__(self):
         return self.name
 
     class Meta:
@@ -40,7 +40,7 @@ class ItemBase(models.Model):
     pdv = models.ForeignKey(PDV, on_delete=models.CASCADE, verbose_name=_("PDV"))  
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, verbose_name=_("Fornitore"))
 
-    def _str_(self):
+    def __str__(self):
         return f"{self.name} ({self.available_quantity} {self.get_unit_display()})"
 
     class Meta:
@@ -69,7 +69,7 @@ class Preparation(models.Model):
     ingredients = models.ManyToManyField(Ingredient, through='PreparationIngredient')
 
 
-    def _str_(self):
+    def __str__(self):
         return self.name
 
     class Meta:
@@ -109,7 +109,7 @@ class Purchase(models.Model):
             self.content_type = ContentType.objects.get_for_model(model_class)
         super().save(*args, **kwargs)
 
-    def _str_(self):
+    def __str__(self):
         return f"Acquisto di {self.quantity} {self.item} da {self.supplier} il {self.purchase_date}"
 
     class Meta:
