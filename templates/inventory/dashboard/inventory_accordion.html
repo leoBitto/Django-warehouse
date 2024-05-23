@@ -1,0 +1,22 @@
+
+<!-- inventory/templates/inventory/dashboard/inventory_accordion.html -->
+
+<li class="nav-item">
+    <a class="nav-link active" data-bs-toggle="collapse" href="#inventoryAccordion" role="button" aria-expanded="true" aria-controls="inventoryAccordion">
+        Inventory
+    </a>
+    <div class="collapse" id="inventoryAccordion">
+        <ul class="nav flex-column ms-3">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'inventory:item_list' %}" >Items</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'inventory:item_create' %}" >Suppliers</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'inventory:item_create' %}" >Purchases</a>
+            </li>
+        </ul>
+    </div>
+</li>
+
