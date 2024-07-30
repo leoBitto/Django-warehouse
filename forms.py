@@ -1,94 +1,103 @@
+# inventory/forms.py
+
 from django import forms
 from django.utils.translation import gettext_lazy as _
-from .models import Supplier, Item, Ingredient, Purchase
+from django.conf import settings
+from .models import Category, Product, Sale, Order
 
-class SupplierForm(forms.ModelForm):
+class CategoryForm(forms.ModelForm):
     class Meta:
-        model = Supplier
-        fields = ['name', 'contact', 'address']
+        model = Category
+        fields = ['type']
         labels = {
-            'name': _('Nome'),
-            'contact': _('Contatto'),
-            'address': _('Indirizzo'),
+            'type': _('Tipo'),
         }
         widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'contact': forms.TextInput(attrs={'class': 'form-control'}),
-            'address': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'type': forms.TextInput(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['name'].widget.attrs.update({'placeholder': _('Inserisci il nome')})
-        self.fields['contact'].widget.attrs.update({'placeholder': _('Inserisci il contatto')})
-        self.fields['address'].widget.attrs.update({'placeholder': _('Inserisci l\'indirizzo')})
+        self.fields['type'].widget.attrs.update({'placeholder': _('Inserisci il tipo di categoria')})
 
-class ItemForm(forms.ModelForm):
+class ProductForm(forms.ModelForm):
     class Meta:
-        model = Item
-        fields = ['name', 'available_quantity', 'pdv']
+        model = Product
+        fields = ['name', 'code', 'category']
         labels = {
             'name': _('Nome'),
-            'available_quantity': _('Quantità disponibile'),
-            'pdv': _('PDV'),
+            'code': _('Codice'),
+            'category': _('Categoria'),
         }
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'available_quantity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'pdv': forms.Select(attrs={'class': 'form-control'}),
+            'code': forms.TextInput(attrs={'class': 'form-control'}),
+            'category': forms.Select(attrs={'class': 'form-control'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['name'].widget.attrs.update({'placeholder': _('Inserisci il nome')})
-        self.fields['available_quantity'].widget.attrs.update({'placeholder': _('Inserisci la quantità disponibile')})
+        self.fields['name'].widget.attrs.update({'placeholder': _('Inserisci il nome del prodotto')})
+        self.fields['code'].widget.attrs.update({'placeholder': _('Inserisci il codice del prodotto')})
 
-class IngredientForm(forms.ModelForm):
+class SaleForm(forms.ModelForm):
     class Meta:
-        model = Ingredient
-        fields = ['name', 'available_quantity', 'pdv', 'allergens']
+        model = Sale
+        fields = ['product', 'sale_date', 'delivery_date', 'quantity', 'unit_price']
         labels = {
-            'name': _('Nome'),
-            'available_quantity': _('Quantità disponibile'),
-            'pdv': _('PDV'),
-            'allergens': _('Allergeni'),
-        }
-        widgets = {
-            'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'available_quantity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'pdv': forms.Select(attrs={'class': 'form-control'}),
-            'allergens': forms.SelectMultiple(attrs={'class': 'form-control'}),
-        }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['name'].widget.attrs.update({'placeholder': _('Inserisci il nome')})
-        self.fields['available_quantity'].widget.attrs.update({'placeholder': _('Inserisci la quantità disponibile')})
-
-class PurchaseForm(forms.ModelForm):
-    class Meta:
-        model = Purchase
-        fields = ['item', 'supplier', 'unit_price', 'quantity', 'purchase_date', 'payment_date']
-        labels = {
-            'item': _('Articolo'),
-            'supplier': _('Fornitore'),
-            'unit_price': _('Prezzo unitario'),
+            'product': _('Prodotto'),
+            'sale_date': _('Data di vendita'),
+            'delivery_date': _('Data di consegna'),
             'quantity': _('Quantità'),
-            'purchase_date': _('Data acquisto'),
-            'payment_date': _('Data pagamento'),
+            'unit_price': _('Prezzo unitario'),
         }
         widgets = {
-            'item': forms.Select(attrs={'class': 'form-control'}),
-            'supplier': forms.Select(attrs={'class': 'form-control'}),
-            'unit_price': forms.NumberInput(attrs={'class': 'form-control'}),
+            'product': forms.Select(attrs={'class': 'form-control'}),
+            'sale_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'delivery_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'purchase_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'payment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields['unit_price'].widget.attrs.update({'placeholder': _('Inserisci il prezzo unitario')})
         self.fields['quantity'].widget.attrs.update({'placeholder': _('Inserisci la quantità')})
-        self.fields['purchase_date'].widget.attrs.update({'placeholder': _('Seleziona la data di acquisto')})
-        self.fields['payment_date'].widget.attrs.update({'placeholder': _('Seleziona la data di pagamento')})
+        self.fields['unit_price'].widget.attrs.update({'placeholder': _('Inserisci il prezzo unitario')})
+
+        self.fields['customer'] = forms.ModelChoiceField(
+            queryset=Sale.customer.field.related_model.objects.all(),
+            required=False,
+            label=_("Cliente"),
+            widget=forms.Select(attrs={'class': 'form-control'})
+        )
+
+class OrderForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ['product', 'sale_date', 'delivery_date', 'quantity', 'unit_price']
+        labels = {
+            'product': _('Prodotto'),
+            'sale_date': _('Data di ordine'),
+            'delivery_date': _('Data di consegna prevista'),
+            'quantity': _('Quantità'),
+            'unit_price': _('Prezzo unitario'),
+        }
+        widgets = {
+            'product': forms.Select(attrs={'class': 'form-control'}),
+            'sale_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'delivery_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['quantity'].widget.attrs.update({'placeholder': _('Inserisci la quantità')})
+        self.fields['unit_price'].widget.attrs.update({'placeholder': _('Inserisci il prezzo unitario')})
+
+        self.fields['supplier'] = forms.ModelChoiceField(
+            queryset=Order.supplier.field.related_model.objects.all(),
+            required=False,
+            label=_("Fornitore"),
+            widget=forms.Select(attrs={'class': 'form-control'})
+        )

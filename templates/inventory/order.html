@@ -1,0 +1,71 @@
+{% extends "backoffice/backoffice_base.html" %}
+{% load static %}
+
+{% block dashboard_app %}
+<div class="container mt-4">
+    <h2 class="h4">Ordini</h2>
+
+    <!-- Form per creare un nuovo ordine -->
+    <div class="mb-4">
+        <button class="btn bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#createOrderForm" aria-expanded="false" aria-controls="createOrderForm">
+            Aggiungi Ordine
+        </button>
+        <div class="collapse mt-3" id="createOrderForm">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ order_form.as_p }}
+                        <button type="submit" name="create_order" class="btn bg-dark text-white">Crea Ordine</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista degli ordini -->
+    <div class="mt-4">
+        <h3 class="h5">Lista Ordini</h3>
+        <ul class="list-group">
+            {% for order in orders %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>{{ order.product.name }} - {{ order.supplier.name }}</span>
+                        <div>
+                            <!-- Form per eliminare un ordine -->
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="order_id" value="{{ order.id }}">
+                                <button type="submit" name="delete_order" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+
+                            <!-- Pulsante per mostrare il form di modifica -->
+                            <button class="btn bg-dark text-white btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#updateForm-{{ order.id }}" aria-expanded="false" aria-controls="updateForm-{{ order.id }}">
+                                Modifica
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Form per aggiornare un ordine -->
+                    <div class="collapse mt-3" id="updateForm-{{ order.id }}">
+                        <div class="card">
+                            <div class="card-body">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    {{ order_form.as_p }}
+                                    <input type="hidden" name="order_id" value="{{ order.id }}">
+                                    <button type="submit" name="update_order" class="btn bg-dark text-white">Salva Modifiche</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            {% empty %}
+                <li class="list-group-item">Nessun ordine disponibile.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock dashboard_app %}

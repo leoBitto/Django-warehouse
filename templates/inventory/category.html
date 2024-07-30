@@ -1,0 +1,71 @@
+{% extends "backoffice/backoffice_base.html" %}
+{% load static %}
+
+{% block dashboard_app %}
+<div class="container mt-4">
+    <h2 class="h4">Categorie Prodotti</h2>
+
+    <!-- Form per creare una nuova categoria -->
+    <div class="mb-4">
+        <button class="btn bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#createCategoryForm" aria-expanded="false" aria-controls="createCategoryForm">
+            Aggiungi Categoria
+        </button>
+        <div class="collapse mt-3" id="createCategoryForm">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ category_form.as_p }}
+                        <button type="submit" name="create_category" class="btn bg-dark text-white">Crea Categoria</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista delle categorie -->
+    <div class="mt-4">
+        <h3 class="h5">Lista Categorie</h3>
+        <ul class="list-group">
+            {% for category in categories %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>{{ category.type }}</span>
+                        <div>
+                            <!-- Form per eliminare una categoria -->
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="category_id" value="{{ category.id }}">
+                                <button type="submit" name="delete_category" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+
+                            <!-- Pulsante per mostrare il form di modifica -->
+                            <button class="btn bg-dark text-white btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#updateForm-{{ category.id }}" aria-expanded="false" aria-controls="updateForm-{{ category.id }}">
+                                Modifica
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Form per aggiornare una categoria -->
+                    <div class="collapse mt-3" id="updateForm-{{ category.id }}">
+                        <div class="card">
+                            <div class="card-body">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    {{ category_form.as_p }}
+                                    <input type="hidden" name="category_id" value="{{ category.id }}">
+                                    <button type="submit" name="update_category" class="btn bg-dark text-white">Salva Modifiche</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            {% empty %}
+                <li class="list-group-item">Nessuna categoria disponibile.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock dashboard_app %}

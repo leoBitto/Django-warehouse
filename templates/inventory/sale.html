@@ -1,0 +1,71 @@
+{% extends "backoffice/backoffice_base.html" %}
+{% load static %}
+
+{% block dashboard_app %}
+<div class="container mt-4">
+    <h2 class="h4">Vendite</h2>
+
+    <!-- Form per creare una nuova vendita -->
+    <div class="mb-4">
+        <button class="btn bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#createSaleForm" aria-expanded="false" aria-controls="createSaleForm">
+            Aggiungi Vendita
+        </button>
+        <div class="collapse mt-3" id="createSaleForm">
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ sale_form.as_p }}
+                        <button type="submit" name="create_sale" class="btn bg-dark text-white">Crea Vendita</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Lista delle vendite -->
+    <div class="mt-4">
+        <h3 class="h5">Lista Vendite</h3>
+        <ul class="list-group">
+            {% for sale in sales %}
+                <li class="list-group-item">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>{{ sale.product.name }} - {{ sale.customer.name }}</span>
+                        <div>
+                            <!-- Form per eliminare una vendita -->
+                            <form method="post" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="sale_id" value="{{ sale.id }}">
+                                <button type="submit" name="delete_sale" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+
+                            <!-- Pulsante per mostrare il form di modifica -->
+                            <button class="btn bg-dark text-white btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#updateForm-{{ sale.id }}" aria-expanded="false" aria-controls="updateForm-{{ sale.id }}">
+                                Modifica
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Form per aggiornare una vendita -->
+                    <div class="collapse mt-3" id="updateForm-{{ sale.id }}">
+                        <div class="card">
+                            <div class="card-body">
+                                <form method="post">
+                                    {% csrf_token %}
+                                    {{ sale_form.as_p }}
+                                    <input type="hidden" name="sale_id" value="{{ sale.id }}">
+                                    <button type="submit" name="update_sale" class="btn bg-dark text-white">Salva Modifiche</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            {% empty %}
+                <li class="list-group-item">Nessuna vendita disponibile.</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endblock dashboard_app %}
