@@ -23,7 +23,7 @@ class Category(models.Model):
 class Product(models.Model):
     name = models.CharField(_("nome"), max_length=100)
     code = models.CharField(_("codice"), max_length=50, unique=True)
-    category = models.ForeignKey(Category, on_delete=models.SET_NULL, related_name='products', verbose_name=_("categoria"))
+    category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='products', verbose_name=_("categoria"))
 
     class Meta:
         verbose_name = _("prodotto")
@@ -33,7 +33,7 @@ class Product(models.Model):
         return f"{self.name} ({self.code})"
 
 class Transaction(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='transactions', verbose_name=_("prodotto"))
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='%(class)s_transactions', verbose_name=_("prodotto"))
     sale_date = models.DateField(_("data vendita"))
     delivery_date = models.DateField(_("data consegna"))
     quantity = models.IntegerField(_("pezzi"))
