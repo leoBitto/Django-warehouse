@@ -3,13 +3,16 @@
 
 {% block dashboard_app %}
 <div class="container mt-4">
-    <h2 class="h4">Prodotti</h2>
-
-    <!-- Form per creare un nuovo prodotto -->
-    <div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="h4">Prodotti</h2>
         <button class="btn bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#createProductForm" aria-expanded="false" aria-controls="createProductForm">
             Aggiungi Prodotto
         </button>
+    </div>
+
+    <!-- Form per creare un nuovo prodotto -->
+    <div class="mb-4">
+        
         <div class="collapse mt-3" id="createProductForm">
             <div class="card">
                 <div class="card-body">
@@ -30,7 +33,8 @@
             {% for product in products %}
                 <li class="list-group-item">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span>{{ product.name }} - {{ product.code }}</span>
+                        <span>{{ product.name }} - {{ product.internal_code }} - {{ product.categoy }}</span>
+                        <span> quantità: {{ product.stock_quantity }} </span>
                         <div>
                             <!-- Form per eliminare un prodotto -->
                             <form method="post" style="display:inline;">

@@ -1,103 +1,99 @@
-# inventory/forms.py
-
 from django import forms
-from django.utils.translation import gettext_lazy as _
-from django.conf import settings
 from .models import Category, Product, Sale, Order
+from decimal import Decimal
 
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
-        fields = ['type']
-        labels = {
-            'type': _('Tipo'),
-        }
+        fields = ['name', 'parent']
         widgets = {
-            'type': forms.TextInput(attrs={'class': 'form-control'}),
+            'parent': forms.Select(attrs={'class': 'form-control'}),
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['type'].widget.attrs.update({'placeholder': _('Inserisci il tipo di categoria')})
 
 class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['name', 'code', 'category']
-        labels = {
-            'name': _('Nome'),
-            'code': _('Codice'),
-            'category': _('Categoria'),
-        }
+        fields = [
+            'name', 'category', 
+            'stock_quantity', 'unit_price', 'image', 'is_visible', 'description'
+        ]
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
-            'code': forms.TextInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
+            'stock_quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'image': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
+            'is_visible': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+        }
+    
+    def clean_unit_price(self):
+        unit_price = self.cleaned_data.get('unit_price')
+        if unit_price < Decimal('0'):
+            raise forms.ValidationError('Il prezzo unitario non può essere negativo.')
+        return unit_price
+
+class TransactionForm(forms.ModelForm):
+    class Meta:
+        abstract = True
+        fields = [
+            'product', 'sale_date', 'delivery_date', 
+            'payment_date', 'quantity', 'unit_price', 'status'
+        ]
+        widgets = {
+            'product': forms.Select(attrs={'class': 'form-control'}),
+            'sale_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%d/%m/%Y'),
+            'delivery_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%d/%m/%Y'),
+            'payment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%d/%m/%Y'),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
+            'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
+            'status': forms.Select(attrs={'class': 'form-control'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['name'].widget.attrs.update({'placeholder': _('Inserisci il nome del prodotto')})
-        self.fields['code'].widget.attrs.update({'placeholder': _('Inserisci il codice del prodotto')})
+    def clean(self):
+        cleaned_data = super().clean()
+        sale_date = cleaned_data.get('sale_date')
+        delivery_date = cleaned_data.get('delivery_date')
+        payment_date = cleaned_data.get('payment_date')
+        unit_price = cleaned_data.get('unit_price')
+        
+        if sale_date and delivery_date and sale_date > delivery_date:
+            self.add_error('sale_date', 'La data di vendita deve essere prima della data di consegna.')
+        
+        if sale_date and payment_date and payment_date < sale_date:
+            self.add_error('payment_date', 'La data di pagamento non può essere anteriore alla data di vendita.')
+        
+        if unit_price is not None and unit_price < Decimal('0'):
+            self.add_error('unit_price', 'Il prezzo unitario non può essere negativo.')
 
-class SaleForm(forms.ModelForm):
-    class Meta:
+        return cleaned_data
+
+class SaleForm(TransactionForm):
+    class Meta(TransactionForm.Meta):
         model = Sale
-        fields = ['product', 'sale_date', 'delivery_date', 'quantity', 'unit_price']
-        labels = {
-            'product': _('Prodotto'),
-            'sale_date': _('Data di vendita'),
-            'delivery_date': _('Data di consegna'),
-            'quantity': _('Quantità'),
-            'unit_price': _('Prezzo unitario'),
-        }
+        fields = TransactionForm.Meta.fields + ['customer']
         widgets = {
-            'product': forms.Select(attrs={'class': 'form-control'}),
-            'sale_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'delivery_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            **TransactionForm.Meta.widgets,
+            'customer': forms.Select(attrs={'class': 'form-control'}),
         }
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['quantity'].widget.attrs.update({'placeholder': _('Inserisci la quantità')})
-        self.fields['unit_price'].widget.attrs.update({'placeholder': _('Inserisci il prezzo unitario')})
+    def clean(self):
+        cleaned_data = super().clean()
+        product = cleaned_data.get('product')
+        quantity = cleaned_data.get('quantity')
+        
+        if product and quantity:
+            if quantity > product.stock_quantity:
+                self.add_error('quantity', 'Quantità richiesta non disponibile in stock.')
+        
+        return cleaned_data
 
-        self.fields['customer'] = forms.ModelChoiceField(
-            queryset=Sale.customer.field.related_model.objects.all(),
-            required=False,
-            label=_("Cliente"),
-            widget=forms.Select(attrs={'class': 'form-control'})
-        )
-
-class OrderForm(forms.ModelForm):
-    class Meta:
+class OrderForm(TransactionForm):
+    class Meta(TransactionForm.Meta):
         model = Order
-        fields = ['product', 'sale_date', 'delivery_date', 'quantity', 'unit_price']
-        labels = {
-            'product': _('Prodotto'),
-            'sale_date': _('Data di ordine'),
-            'delivery_date': _('Data di consegna prevista'),
-            'quantity': _('Quantità'),
-            'unit_price': _('Prezzo unitario'),
-        }
+        fields = TransactionForm.Meta.fields + ['supplier']
         widgets = {
-            'product': forms.Select(attrs={'class': 'form-control'}),
-            'sale_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'delivery_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control'}),
-            'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            **TransactionForm.Meta.widgets,
+            'supplier': forms.Select(attrs={'class': 'form-control'}),
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.fields['quantity'].widget.attrs.update({'placeholder': _('Inserisci la quantità')})
-        self.fields['unit_price'].widget.attrs.update({'placeholder': _('Inserisci il prezzo unitario')})
-
-        self.fields['supplier'] = forms.ModelChoiceField(
-            queryset=Order.supplier.field.related_model.objects.all(),
-            required=False,
-            label=_("Fornitore"),
-            widget=forms.Select(attrs={'class': 'form-control'})
-        )

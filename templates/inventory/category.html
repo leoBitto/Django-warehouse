@@ -3,13 +3,16 @@
 
 {% block dashboard_app %}
 <div class="container mt-4">
-    <h2 class="h4">Categorie Prodotti</h2>
-
-    <!-- Form per creare una nuova categoria -->
-    <div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <h2 class="h4">Categorie Prodotti</h2>
         <button class="btn bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#createCategoryForm" aria-expanded="false" aria-controls="createCategoryForm">
             Aggiungi Categoria
         </button>
+    </div>
+
+    <!-- Form per creare una nuova categoria -->
+    <div class="mb-4">
+        
         <div class="collapse mt-3" id="createCategoryForm">
             <div class="card">
                 <div class="card-body">
@@ -30,7 +33,7 @@
             {% for category in categories %}
                 <li class="list-group-item">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span>{{ category.type }}</span>
+                        <span>{{ category.parent }} - {{ category.name }}</span>
                         <div>
                             <!-- Form per eliminare una categoria -->
                             <form method="post" style="display:inline;">
