@@ -12,7 +12,6 @@
 
     <!-- Form per creare un nuovo ordine -->
     <div class="mb-4">
-
         <div class="collapse mt-3" id="createOrderForm">
             <div class="card">
                 <div class="card-body">
@@ -26,12 +25,17 @@
         </div>
     </div>
 
+    <!-- Campo di ricerca -->
+    <div class="m-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Cerca ordine...">
+    </div>
+
     <!-- Lista degli ordini -->
     <div class="mt-4">
         <h3 class="h5">Lista Ordini</h3>
-        <ul class="list-group">
+        <ul class="list-group" id="orderList">
             {% for order in orders %}
-            <li class="list-group-item">
+            <li class="list-group-item order-item">
                 <div class="row align-items-center">
                     <div class="col-md-3">
                         <h5 class="mb-0">{{ order.product.name }}</h5>
@@ -82,10 +86,29 @@
                     </div>
                 </div>
             </li>
-        {% empty %}
+            {% empty %}
             <li class="list-group-item">Nessun ordine disponibile.</li>
-        {% endfor %}
+            {% endfor %}
         </ul>
     </div>
 </div>
+
+<!-- Script di ricerca -->
+<script>
+    $(document).ready(function () {
+        $('#searchInput').on('keyup', function () {
+            var query = $(this).val().toLowerCase();
+            $('.order-item').each(function () {
+                var orderText = $(this).find('h5').text().toLowerCase() + " " +
+                                $(this).find('small').text().toLowerCase() + " " +
+                                $(this).find('.badge').text().toLowerCase(); // Testo dell'ordine
+                if (orderText.includes(query)) {
+                    $(this).show();
+                } else {
+                    $(this).hide();
+                }
+            });
+        });
+    });
+</script>
 {% endblock dashboard_app %}

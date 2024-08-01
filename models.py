@@ -30,7 +30,7 @@ class Product(models.Model):
     stock_quantity = models.PositiveIntegerField(_("quantità in stock"), default=0)
     unit_price = models.DecimalField(_("prezzo unitario"), max_digits=10, decimal_places=2)
     image = models.ImageField(_("immagine"), upload_to='products/', blank=True, null=True)
-    is_visible = models.BooleanField(_("visibile nel sito web"), default=True)
+    is_visible = models.BooleanField(_("visibile nel sito web"), default=False)
     description = models.TextField(_("descrizione"), blank=True, null=True)
 
     class Meta:
@@ -46,6 +46,10 @@ class Product(models.Model):
     def clean(self):
         if self.unit_price < Decimal('0'):
             raise ValidationError(_('Il prezzo unitario non può essere negativo.'))
+        
+        if self.is_visible and (not self.image or not self.description):
+            raise ValidationError(_('Il prodotto può essere reso visibile solo se è presente un\'immagine e una descrizione.'))
+
 
     def save(self, *args, **kwargs):
         if not self.internal_code:

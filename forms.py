@@ -33,6 +33,20 @@ class ProductForm(forms.ModelForm):
         if unit_price < Decimal('0'):
             raise forms.ValidationError('Il prezzo unitario non può essere negativo.')
         return unit_price
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        
+        is_visible = cleaned_data.get('is_visible')
+        image = cleaned_data.get('image')
+        description = cleaned_data.get('description')
+
+        if is_visible and (not image or not description):
+            raise forms.ValidationError(
+                'Il prodotto può essere reso visibile solo se è presente un\'immagine e una descrizione.'
+            )
+
+        return cleaned_data
 
 class TransactionForm(forms.ModelForm):
     class Meta:
@@ -43,9 +57,9 @@ class TransactionForm(forms.ModelForm):
         ]
         widgets = {
             'product': forms.Select(attrs={'class': 'form-control'}),
-            'sale_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%d/%m/%Y'),
-            'delivery_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%d/%m/%Y'),
-            'payment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format='%d/%m/%Y'),
+            'sale_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format=('%d/%m/%Y')),
+            'delivery_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format=('%d/%m/%Y')),
+            'payment_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format=('%d/%m/%Y')),
             'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
             'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
             'status': forms.Select(attrs={'class': 'form-control'}),

@@ -12,7 +12,6 @@
 
     <!-- Form per creare una nuova vendita -->
     <div class="mb-4">
-        
         <div class="collapse mt-3" id="createSaleForm">
             <div class="card">
                 <div class="card-body">
@@ -26,12 +25,17 @@
         </div>
     </div>
 
+    <!-- Campo di ricerca -->
+    <div class="m-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Cerca vendita...">
+    </div>
+
     <!-- Lista delle vendite -->
     <div class="mt-4">
         <h3 class="h5">Lista Vendite</h3>
-        <ul class="list-group">
+        <ul class="list-group" id="saleList">
             {% for sale in sales %}
-            <li class="list-group-item">
+            <li class="list-group-item sale-item">
                 <div class="row align-items-center">
                     <div class="col-md-3">
                         <h5 class="mb-0">{{ sale.product.name }}</h5>
@@ -87,4 +91,26 @@
         </ul>
     </div>
 </div>
+
+<!-- Script di ricerca -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('keyup', function () {
+            var query = searchInput.value.toLowerCase();
+            var saleItems = document.querySelectorAll('.sale-item');
+            
+            saleItems.forEach(function (item) {
+                var productName = item.querySelector('h5').textContent.toLowerCase();
+                var customerName = item.querySelector('small').textContent.toLowerCase();
+                if (productName.includes(query) || customerName.includes(query)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
+
 {% endblock dashboard_app %}

@@ -12,7 +12,6 @@
 
     <!-- Form per creare un nuovo prodotto -->
     <div class="mb-4">
-        
         <div class="collapse mt-3" id="createProductForm">
             <div class="card">
                 <div class="card-body">
@@ -26,15 +25,20 @@
         </div>
     </div>
 
+    <!-- Campo di ricerca -->
+    <div class="m-3">
+        <input type="text" id="searchInput" class="form-control" placeholder="Cerca prodotto...">
+    </div>
+
     <!-- Lista dei prodotti -->
     <div class="mt-4">
         <h3 class="h5">Lista Prodotti</h3>
-        <ul class="list-group">
+        <ul class="list-group" id="productList">
             {% for product in products %}
-                <li class="list-group-item">
+                <li class="list-group-item product-item">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span>{{ product.name }} - {{ product.internal_code }} - {{ product.categoy }}</span>
-                        <span> quantità: {{ product.stock_quantity }} </span>
+                        <span>{{ product.name }} - {{ product.internal_code }} - {{ product.category }}</span>
+                        <span>Quantità: {{ product.stock_quantity }}</span>
                         <div>
                             <!-- Form per eliminare un prodotto -->
                             <form method="post" style="display:inline;">
@@ -72,4 +76,24 @@
         </ul>
     </div>
 </div>
+
+<!-- Script di ricerca -->
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('keyup', function () {
+            var query = searchInput.value.toLowerCase();
+            var productItems = document.querySelectorAll('.product-item');
+            
+            productItems.forEach(function (item) {
+                var productText = item.textContent.toLowerCase();
+                if (productText.includes(query)) {
+                    item.style.display = '';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+        });
+    });
+</script>
 {% endblock dashboard_app %}
