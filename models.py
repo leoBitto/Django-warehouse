@@ -67,9 +67,11 @@ class Product(models.Model):
 
 class Transaction(models.Model):
     STATUS_CHOICES = [
-        ('pending', _('In attesa')),
-        ('completed', _('Completata')),
-        ('cancelled', _('Annullata')),
+        ('pending', _('In Attesa')),
+        ('sold', _('Venduto')),
+        ('delivered', _('Consegnato')),
+        ('paid', _('Pagato')),
+        ('cancelled', _('Annullato')),
     ]
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='%(class)s_transactions', verbose_name=_("prodotto"))
     sale_date = models.DateField(_("data vendita"), blank=True, null=True)
@@ -89,6 +91,19 @@ class Transaction(models.Model):
             raise ValidationError(_('La data di pagamento non può essere anteriore alla data di vendita.'))
         if self.unit_price < Decimal('0'):
             raise ValidationError(_('Il prezzo unitario non può essere negativo.'))
+        
+        if self.status != 'cancelled':
+            if self.payment_date:
+                self.status = 'paid'
+            elif self.delivery_date:
+                self.status = 'delivered'
+            elif self.sale_date:
+                self.status = 'sold'
+            else:
+                self.status = 'pending'
+        else:
+            # Se lo stato è annullato, non cambiare in base alle date
+            pass
 
     @property
     def total_price(self):

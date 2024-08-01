@@ -37,7 +37,11 @@
             {% for category in categories %}
                 <li class="list-group-item category-item">
                     <div class="d-flex justify-content-between align-items-center">
-                        <span>{{ category.parent }} - {{ category.name }}</span>
+                        {% if category.parent %}
+                            <span>{{ category.parent }} - {{ category.name }}</span>
+                        {% else %}
+                            <span>{{ category.name }}</span>
+                        {% endif %}
                         <div>
                             <!-- Form per eliminare una categoria -->
                             <form method="post" style="display:inline;">
