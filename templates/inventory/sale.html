@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block dashboard_app %}
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center">
         <h2 class="h4">Vendite</h2>
@@ -10,14 +11,13 @@
         </button>
     </div>
 
-    <!-- Form per creare una nuova vendita -->
     <div class="mb-4">
         <div class="collapse mt-3" id="createSaleForm">
             <div class="card">
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
-                        {{ sale_form.as_p }}
+                        {{ create_form.as_p }}
                         <button type="submit" name="create_sale" class="btn bg-dark text-white">Crea Vendita</button>
                     </form>
                 </div>
@@ -30,87 +30,85 @@
         <input type="text" id="searchInput" class="form-control" placeholder="Cerca vendita...">
     </div>
 
-    <!-- Lista delle vendite -->
+    <!-- Tabella delle vendite -->
     <div class="mt-4">
         <h3 class="h5">Lista Vendite</h3>
-        <ul class="list-group" id="saleList">
-            {% for sale in sales %}
-            <li class="list-group-item sale-item">
-                <div class="row align-items-center">
-                    <div class="col-md-3">
-                        <h5 class="mb-0">{{ sale.product.name }}</h5>
-                        <small class="text-muted">Cliente: {{ sale.customer.name|default:"N/A" }}</small>
-                    </div>
-                    <div class="col-md-3">
-                        <span class="badge {% if sale.status == 'completed' %}bg-success{% elif sale.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
-                            {{ sale.get_status_display }}
-                        </span>
-                    </div>
-                    <div class="col-md-4">
-                        <div><i class="fas fa-shopping-cart"></i> Vendita: {{ sale.sale_date|date:"d/m/Y"|default:"Non specificata" }}</div>
-                        <div><i class="fas fa-truck"></i> Consegna: {{ sale.delivery_date|date:"d/m/Y"|default:"Non specificata" }}</div>
-                        <div><i class="fas fa-money-bill-wave"></i> Pagamento: {{ sale.payment_date|date:"d/m/Y"|default:"Non specificata" }}</div>
-                    </div>
-                    <div class="col-md-2 text-end">
-                        <div>Quantità: {{ sale.quantity }}</div>
-                        <div>Totale: €{{ sale.total_price }}</div>
-                    </div>
-                </div>
-                <div class="mt-2">
-                    <form method="post" style="display:inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="sale_id" value="{{ sale.id }}">
-                        <button type="submit" name="delete_sale" class="btn btn-danger btn-sm bg-dark">
-                            <i class="fas fa-trash-alt"></i> Elimina
-                        </button>
-                    </form>
-                    <button class="btn btn-primary btn-sm bg-dark" type="button" data-bs-toggle="collapse" data-bs-target="#updateForm-{{ sale.id }}" aria-expanded="false" aria-controls="updateForm-{{ sale.id }}">
-                        <i class="fas fa-edit"></i> Modifica
-                    </button>
-                </div>
-        
-                <!-- Form per aggiornare una vendita -->
-                <div class="collapse mt-3" id="updateForm-{{ sale.id }}">
-                    <div class="card">
-                        <div class="card-body">
-                            <form method="post">
+        <table id="saleTable" class="table table-bordered w-100">
+            <thead>
+                <tr>
+                    <th>Cliente</th>
+                    <th>Prodotto</th>
+                    <th>Quantità</th>
+                    <th>Prezzo Totale</th>
+                    <th>Data</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for info in sale_forms %}
+                    <tr class="sale-item">
+                        <td>{{ info.sale.customer }}</td>
+                        <td>{{ info.sale.product.name }}</td>
+                        <td>{{ info.sale.quantity }}</td>
+                        <td>€{{ info.sale.total_price }}</td>
+                        <td>{{ info.sale.sale_date }}</td>
+                        <td class="col-md-3">
+                            <!-- Form per eliminare una vendita -->
+                            <form method="post" style="display:inline;">
                                 {% csrf_token %}
-                                {{ sale_form.as_p }}
-                                <input type="hidden" name="sale_id" value="{{ sale.id }}">
-                                <button type="submit" name="update_sale" class="btn btn-primary bg-dark">
-                                    <i class="fas fa-save"></i> Salva Modifiche
+                                <input type="hidden" name="sale_id" value="{{ info.sale.id }}">
+                                <button type="submit" name="delete_sale" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash-alt"></i>
                                 </button>
                             </form>
-                        </div>
-                    </div>
-                </div>
-            </li>
-        {% empty %}
-            <li class="list-group-item">Nessuna vendita disponibile.</li>
-        {% endfor %}
-        </ul>
+
+                            <!-- Pulsante per mostrare il form di modifica -->
+                            <button class="btn bg-dark text-white btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#updateForm-{{ info.sale.id }}" aria-expanded="false" aria-controls="updateForm-{{ info.sale.id }}">
+                                Modifica
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="5">
+                            <!-- Form per aggiornare una vendita -->
+                            <div class="collapse mt-3" id="updateForm-{{ info.sale.id }}">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            {{ info.form.as_p }}
+                                            <input type="hidden" name="sale_id" value="{{ info.sale.id }}">
+                                            <button type="submit" name="update_sale" class="btn bg-dark text-white">Salva Modifiche</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5">Nessuna vendita disponibile.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
 <!-- Script di ricerca -->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        var searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('keyup', function () {
-            var query = searchInput.value.toLowerCase();
-            var saleItems = document.querySelectorAll('.sale-item');
-            
-            saleItems.forEach(function (item) {
-                var productName = item.querySelector('h5').textContent.toLowerCase();
-                var customerName = item.querySelector('small').textContent.toLowerCase();
-                if (productName.includes(query) || customerName.includes(query)) {
-                    item.style.display = '';
+    $(document).ready(function () {
+        $('#searchInput').on('keyup', function () {
+            var query = $(this).val().toLowerCase();
+            $('.sale-item').each(function () {
+                var saleProduct = $(this).find('td').first().text().toLowerCase(); // Nome del prodotto della vendita
+                if (saleProduct.includes(query)) {
+                    $(this).show();
                 } else {
-                    item.style.display = 'none';
+                    $(this).hide();
                 }
             });
         });
     });
 </script>
-
 {% endblock dashboard_app %}

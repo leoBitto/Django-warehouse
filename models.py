@@ -4,6 +4,7 @@ from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
 import uuid
+from django.utils import timezone
 from decimal import Decimal
 
 if 'crm' in settings.INSTALLED_APPS:
@@ -122,15 +123,16 @@ class Sale(Transaction):
         return _("Vendita a {customer} - {product}").format(customer=self.customer.name if self.customer else 'N/A', product=self.product.name)
 
     def save(self, *args, **kwargs):
-        with transaction.atomic():
-            if self.pk is None:  # se è una nuova vendita
+        # Check if sale_date is in the past before updating stock
+        if self.sale_date and self.sale_date < timezone.now().date():
+            if self.status == 'sold':
                 self.product.update_stock(-self.quantity)
-            elif self.status == 'cancelled' and self._state.adding is False:
-                # Se stiamo cancellando una vendita esistente
-                original = Sale.objects.get(pk=self.pk)
-                if original.status != 'cancelled':
+            elif self.status == 'cancelled':
+                # Revert stock change if sale was cancelled
+                original = Sale.objects.filter(pk=self.pk).first()
+                if original and original.status != 'cancelled':
                     self.product.update_stock(original.quantity)
-            super().save(*args, **kwargs)
+        super().save(*args, **kwargs)
 
 
 class Order(Transaction):
@@ -144,12 +146,13 @@ class Order(Transaction):
         return _("Ordine da {supplier} - {product}").format(supplier=self.supplier.name if self.supplier else 'N/A', product=self.product.name)
 
     def save(self, *args, **kwargs):
-        with transaction.atomic():
-            if self.pk is None:  # se è un nuovo ordine
+        # Check if delivery_date is in the past before updating stock
+        if self.delivery_date and self.delivery_date < timezone.now().date():
+            if self.status == 'delivered':
                 self.product.update_stock(self.quantity)
-            elif self.status == 'cancelled' and self._state.adding is False:
-                # Se stiamo cancellando un ordine esistente
-                original = Order.objects.get(pk=self.pk)
-                if original.status != 'cancelled':
+            elif self.status == 'cancelled':
+                # Revert stock change if order was cancelled
+                original = Order.objects.filter(pk=self.pk).first()
+                if original and original.status != 'cancelled':
                     self.product.update_stock(-original.quantity)
-            super().save(*args, **kwargs)
+        super().save(*args, **kwargs)

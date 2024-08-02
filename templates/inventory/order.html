@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block dashboard_app %}
+
 <div class="container mt-4">
     <div class="d-flex justify-content-between align-items-center">
         <h2 class="h4">Ordini</h2>
@@ -10,14 +11,13 @@
         </button>
     </div>
 
-    <!-- Form per creare un nuovo ordine -->
     <div class="mb-4">
         <div class="collapse mt-3" id="createOrderForm">
             <div class="card">
                 <div class="card-body">
                     <form method="post">
                         {% csrf_token %}
-                        {{ order_form.as_p }}
+                        {{ create_form.as_p }}
                         <button type="submit" name="create_order" class="btn bg-dark text-white">Crea Ordine</button>
                     </form>
                 </div>
@@ -30,66 +30,68 @@
         <input type="text" id="searchInput" class="form-control" placeholder="Cerca ordine...">
     </div>
 
-    <!-- Lista degli ordini -->
+    <!-- Tabella degli ordini -->
     <div class="mt-4">
         <h3 class="h5">Lista Ordini</h3>
-        <ul class="list-group" id="orderList">
-            {% for order in orders %}
-            <li class="list-group-item order-item">
-                <div class="row align-items-center">
-                    <div class="col-md-3">
-                        <h5 class="mb-0">{{ order.product.name }}</h5>
-                        <small class="text-muted">Fornitore: {{ order.supplier.name|default:"N/A" }}</small>
-                    </div>
-                    <div class="col-md-2">
-                        <span class="badge {% if order.status == 'completed' %}bg-success{% elif order.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
-                            {{ order.get_status_display }}
-                        </span>
-                    </div>
-                    <div class="col-md-4">
-                        <div><i class="fas fa-file-invoice"></i> Ordine: {{ order.sale_date|date:"d/m/Y"|default:"Non specificata" }}</div>
-                        <div><i class="fas fa-truck-loading"></i> Consegna: {{ order.delivery_date|date:"d/m/Y"|default:"Non specificata" }}</div>
-                        <div><i class="fas fa-money-check"></i> Pagamento: {{ order.payment_date|date:"d/m/Y"|default:"Non specificata" }}</div>
-                    </div>
-                    <div class="col-md-3 text-end">
-                        <div>Quantità: {{ order.quantity }}</div>
-                        <div>Prezzo unitario: €{{ order.unit_price }}</div>
-                        <div><strong>Totale: €{{ order.total_price }}</strong></div>
-                    </div>
-                </div>
-                <div class="mt-2">
-                    <form method="post" style="display:inline;">
-                        {% csrf_token %}
-                        <input type="hidden" name="order_id" value="{{ order.id }}">
-                        <button type="submit" name="delete_order" class="btn btn-danger btn-sm bg-dark">
-                            <i class="fas fa-trash-alt"></i> Elimina
-                        </button>
-                    </form>
-                    <button class="btn btn-primary btn-sm bg-dark" type="button" data-bs-toggle="collapse" data-bs-target="#updateForm-{{ order.id }}" aria-expanded="false" aria-controls="updateForm-{{ order.id }}">
-                        <i class="fas fa-edit"></i> Modifica
-                    </button>
-                </div>
-        
-                <!-- Form per aggiornare un ordine -->
-                <div class="collapse mt-3" id="updateForm-{{ order.id }}">
-                    <div class="card">
-                        <div class="card-body">
-                            <form method="post">
+        <table id="orderTable" class="table table-bordered w-100">
+            <thead>
+                <tr>
+                    <th>Fornitore</th>
+                    <th>Prodotto</th>
+                    <th>Quantità</th>
+                    <th>Prezzo Totale</th>
+                    <th>Data</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for info in order_forms %}
+                    <tr class="order-item">
+                        <td>{{ info.order.supplier }}</td>
+                        <td>{{ info.order.product.name }}</td>
+                        <td>{{ info.order.quantity }}</td>
+                        <td>€{{ info.order.total_price }}</td>
+                        <td>{{ info.order.order_date }}</td>
+                        <td class="col-md-3">
+                            <!-- Form per eliminare un ordine -->
+                            <form method="post" style="display:inline;">
                                 {% csrf_token %}
-                                {{ order_form.as_p }}
-                                <input type="hidden" name="order_id" value="{{ order.id }}">
-                                <button type="submit" name="update_order" class="btn btn-primary bg-dark">
-                                    <i class="fas fa-save"></i> Salva Modifiche
+                                <input type="hidden" name="order_id" value="{{ info.order.id }}">
+                                <button type="submit" name="delete_order" class="btn btn-danger btn-sm">
+                                    <i class="fas fa-trash-alt"></i>
                                 </button>
                             </form>
-                        </div>
-                    </div>
-                </div>
-            </li>
-            {% empty %}
-            <li class="list-group-item">Nessun ordine disponibile.</li>
-            {% endfor %}
-        </ul>
+
+                            <!-- Pulsante per mostrare il form di modifica -->
+                            <button class="btn bg-dark text-white btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#updateForm-{{ info.order.id }}" aria-expanded="false" aria-controls="updateForm-{{ info.order.id }}">
+                                Modifica
+                            </button>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="6">
+                            <!-- Form per aggiornare un ordine -->
+                            <div class="collapse mt-3" id="updateForm-{{ info.order.id }}">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <form method="post">
+                                            {% csrf_token %}
+                                            {{ info.form.as_p }}
+                                            <input type="hidden" name="order_id" value="{{ info.order.id }}">
+                                            <button type="submit" name="update_order" class="btn bg-dark text-white">Salva Modifiche</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="6">Nessun ordine disponibile.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -99,10 +101,8 @@
         $('#searchInput').on('keyup', function () {
             var query = $(this).val().toLowerCase();
             $('.order-item').each(function () {
-                var orderText = $(this).find('h5').text().toLowerCase() + " " +
-                                $(this).find('small').text().toLowerCase() + " " +
-                                $(this).find('.badge').text().toLowerCase(); // Testo dell'ordine
-                if (orderText.includes(query)) {
+                var orderCustomer = $(this).find('td').first().text().toLowerCase(); // Nome del cliente dell'ordine
+                if (orderCustomer.includes(query)) {
                     $(this).show();
                 } else {
                     $(this).hide();
