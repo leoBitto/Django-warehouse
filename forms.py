@@ -48,12 +48,16 @@ class ProductForm(forms.ModelForm):
 
         return cleaned_data
 
+
+
+
 class TransactionForm(forms.ModelForm):
     class Meta:
         abstract = True
         fields = [
             'product', 'sale_date', 'delivery_date', 
-            'payment_date', 'quantity', 'unit_price', 'status'
+            'payment_date', 'quantity', 'unit_price', 
+            'status', 'invoice', 'delivery_note'
         ]
         widgets = {
             'product': forms.Select(attrs={'class': 'form-control'}),
@@ -63,6 +67,8 @@ class TransactionForm(forms.ModelForm):
             'quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '1'}),
             'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
             'status': forms.Select(attrs={'class': 'form-control'}),
+            'invoice': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
+            'delivery_note': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
 
     def __init__(self, *args, **kwargs):
@@ -85,7 +91,6 @@ class TransactionForm(forms.ModelForm):
         if unit_price is not None and unit_price < Decimal('0'):
             self.add_error('unit_price', 'Il prezzo unitario non può essere negativo.')
 
-        # Validazione delle date basata sullo stato
         if status != 'cancelled':
             if sale_date and delivery_date and sale_date > delivery_date:
                 self.add_error('sale_date', 'La data di vendita deve essere prima della data di consegna.')

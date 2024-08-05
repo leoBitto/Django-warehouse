@@ -166,7 +166,7 @@ class SaleView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         if 'create_sale' in request.POST:
-            create_form = SaleForm(request.POST)
+            create_form = SaleForm(request.POST, request.FILES)
             if create_form.is_valid():
                 create_form.save()
                 messages.success(request, 'Vendita registrata con successo!')
@@ -176,10 +176,12 @@ class SaleView(LoginRequiredMixin, View):
                     for error in errors:
                         messages.error(request, f"Errore nel campo '{field}': {error}")
 
+
         elif 'update_sale' in request.POST:
             sale_id = request.POST.get('sale_id')
             sale = get_object_or_404(Sale, id=sale_id)
-            form = SaleForm(request.POST, instance=sale)
+            form = SaleForm(request.POST, request.FILES, instance=sale)
+
             if form.is_valid():
                 form.save()
                 messages.success(request, 'Vendita aggiornata con successo!')
@@ -188,6 +190,7 @@ class SaleView(LoginRequiredMixin, View):
                 for field, errors in form.errors.items():
                     for error in errors:
                         messages.error(request, f"Errore nel campo '{field}': {error}")
+
 
         elif 'delete_sale' in request.POST:
             sale_id = request.POST.get('sale_id')
@@ -207,13 +210,13 @@ class SaleView(LoginRequiredMixin, View):
 
         return render(request, self.template_name, {
             'sale_forms': sales_info,
-            'create_form': create_form,
+            'create_form': create_form
         })
     
 
 class OrderView(LoginRequiredMixin, View):
     template_name = 'inventory/order.html'
-    
+
     def get(self, request, *args, **kwargs):
         orders = Order.objects.all()
         orders_info = []
@@ -233,9 +236,10 @@ class OrderView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         if 'create_order' in request.POST:
-            create_form = OrderForm(request.POST)
+            create_form = OrderForm(request.POST, request.FILES)
+
             if create_form.is_valid():
-                create_form.save()
+                order = create_form.save()
                 messages.success(request, 'Ordine creato con successo!')
                 return redirect('inventory:order_view')
             else:
@@ -246,7 +250,8 @@ class OrderView(LoginRequiredMixin, View):
         elif 'update_order' in request.POST:
             order_id = request.POST.get('order_id')
             order = get_object_or_404(Order, id=order_id)
-            form = OrderForm(request.POST, instance=order)
+            form = OrderForm(request.POST, request.FILES, instance=order)
+
             if form.is_valid():
                 form.save()
                 messages.success(request, 'Ordine aggiornato con successo!')
@@ -274,5 +279,5 @@ class OrderView(LoginRequiredMixin, View):
 
         return render(request, self.template_name, {
             'order_forms': orders_info,
-            'create_form': create_form,
+            'create_form': create_form
         })

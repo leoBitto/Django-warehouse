@@ -15,7 +15,7 @@
         <div class="collapse mt-3" id="createOrderForm">
             <div class="card">
                 <div class="card-body">
-                    <form method="post">
+                    <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         {{ create_form.as_p }}
                         <button type="submit" name="create_order" class="btn bg-dark text-white">Crea Ordine</button>
@@ -74,7 +74,7 @@
                             <div class="collapse mt-3" id="updateForm-{{ info.order.id }}">
                                 <div class="card">
                                     <div class="card-body">
-                                        <form method="post">
+                                        <form method="post" enctype="multipart/form-data">
                                             {% csrf_token %}
                                             {{ info.form.as_p }}
                                             <input type="hidden" name="order_id" value="{{ info.order.id }}">

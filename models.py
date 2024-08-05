@@ -3,6 +3,8 @@ from django.utils.translation import gettext_lazy as _
 from django.conf import settings
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.dispatch import receiver
+from django.db.models.signals import post_delete
 import uuid
 from django.utils import timezone
 from decimal import Decimal
@@ -12,6 +14,7 @@ if 'crm' in settings.INSTALLED_APPS:
 else:
     Customer = None
     Supplier = None
+
 
 class Category(models.Model):
     name = models.CharField(_("tipo"), max_length=50)
@@ -66,6 +69,12 @@ class Product(models.Model):
         self.stock_quantity += quantity_change
         self.save()
 
+@receiver(post_delete, sender=Product)
+def delete_image_on_product_delete(sender, instance, **kwargs):
+    if instance.image:
+        instance.image.delete(False)
+
+
 class Transaction(models.Model):
     STATUS_CHOICES = [
         ('pending', _('In Attesa')),
@@ -81,7 +90,7 @@ class Transaction(models.Model):
     quantity = models.PositiveIntegerField(_("pezzi"))
     unit_price = models.DecimalField(_("prezzo unitario"), max_digits=10, decimal_places=2)
     status = models.CharField(_("stato"), max_length=20, choices=STATUS_CHOICES, default='pending')
-
+    
     class Meta:
         abstract = True
 
@@ -114,6 +123,9 @@ class Transaction(models.Model):
 
 class Sale(Transaction):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True, related_name='sales', verbose_name=_("cliente"))
+    invoice = models.FileField(_("Fattura"), upload_to='invoices/sales/', blank=True)
+    delivery_note = models.FileField(_("Bolla di accompagnamento"), upload_to='delivery_notes/sales/', blank=True)
+
 
     class Meta:
         verbose_name = _("vendita")
@@ -137,6 +149,9 @@ class Sale(Transaction):
 
 class Order(Transaction):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, related_name='orders', verbose_name=_("fornitore"))
+    invoice = models.FileField(_("Fattura"), upload_to='invoices/orders/', blank=True)
+    delivery_note = models.FileField(_("Bolla di accompagnamento"), upload_to='delivery_notes/orders/', blank=True)
+
 
     class Meta:
         verbose_name = _("ordine")
@@ -156,3 +171,19 @@ class Order(Transaction):
                 if original and original.status != 'cancelled':
                     self.product.update_stock(-original.quantity)
         super().save(*args, **kwargs)
+
+@receiver(post_delete, sender=Sale)
+def delete_files_on_sale_delete(sender, instance, **kwargs):
+    if instance.invoice:
+        instance.invoice.delete(False)
+    if instance.delivery_note:
+        instance.delivery_note.delete(False)
+
+@receiver(post_delete, sender=Order)
+def delete_files_on_order_delete(sender, instance, **kwargs):
+    if instance.invoice:
+        instance.invoice.delete(False)
+    if instance.delivery_note:
+        instance.delivery_note.delete(False)
+
+        
