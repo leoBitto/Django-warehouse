@@ -40,7 +40,7 @@
                     <th>Prodotto</th>
                     <th>Quantità</th>
                     <th>Prezzo Totale</th>
-                    <th>Data</th>
+                    <th>Data Vendita</th>
                     <th>Azioni</th>
                 </tr>
             </thead>
@@ -63,28 +63,31 @@
                             </form>
 
                             <!-- Pulsante per mostrare il form di modifica -->
-                            <button class="btn bg-dark text-white btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#updateForm-{{ info.sale.id }}" aria-expanded="false" aria-controls="updateForm-{{ info.sale.id }}">
+                            <button class="btn bg-dark text-white btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#updateModal-{{ info.sale.id }}" aria-expanded="false" aria-controls="updateModal-{{ info.sale.id }}">
                                 Modifica
                             </button>
                         </td>
                     </tr>
-                    <tr>
-                        <td colspan="5">
-                            <!-- Form per aggiornare una vendita -->
-                            <div class="collapse mt-3" id="updateForm-{{ info.sale.id }}">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <form method="post" enctype="multipart/form-data">
-                                            {% csrf_token %}
-                                            {{ info.form.as_p }}
-                                            <input type="hidden" name="sale_id" value="{{ info.sale.id }}">
-                                            <button type="submit" name="update_sale" class="btn bg-dark text-white">Salva Modifiche</button>
-                                        </form>
-                                    </div>
+
+                    <!-- Modal per aggiornare la vendita -->
+                    <div class="modal fade" id="updateModal-{{ info.sale.id }}" tabindex="-1" aria-labelledby="updateModalLabel-{{ info.sale.id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-lg"> <!-- Aggiungi la classe modal-lg qui per renderlo più largo -->
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="updateModalLabel-{{ info.sale.id }}">Modifica Vendita</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form method="post" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        {{ info.form.as_p }}
+                                        <input type="hidden" name="sale_id" value="{{ info.sale.id }}">
+                                        <button type="submit" name="update_sale" class="btn bg-dark text-white">Salva Modifiche</button>
+                                    </form>
                                 </div>
                             </div>
-                        </td>
-                    </tr>
+                        </div>
+                    </div>
                 {% empty %}
                     <tr>
                         <td colspan="5">Nessuna vendita disponibile.</td>

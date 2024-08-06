@@ -7,7 +7,7 @@ from gold_bi.models import InventoryMonthlySnapshot
 
 logger = logging.getLogger('gold_bi')
 
-def create_inventory_monthly_snapshot():
+def aggregate_inventory_snapshot_monthly():
     try:
         # Ottieni la data corrente
         now = timezone.now()

@@ -47,7 +47,7 @@
             <tbody>
                 {% for info in product_forms %}
                     <tr class="product-item">
-                        <td>{{ info.product.name }}</td>
+                        <td><a class="link-secondary" href="{% url 'inventory:product_detail' info.product.id %}">{{ info.product.name }}</a></td>
                         <td>{{ info.product.category.name }}</td>
                         <td>€{{ info.product.unit_price }}</td>
                         <td>{{ info.product.stock_quantity }}</td>

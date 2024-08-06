@@ -36,16 +36,16 @@
         <table id="categoryTable" class="table table-bordered w-100">
             <thead>
                 <tr>
-                    <th>Parent</th>
                     <th>Nome</th>
+                    <th>Parent</th>
                     <th>Azioni</th>
                 </tr>
             </thead>
             <tbody>
                 {% for info in category_info %}
                     <tr class="category-item">
-                        <td>{{ info.category.parent }}</td>
                         <td>{{ info.category.name }}</td>
+                        <td>{{ info.category.parent }}</td>
                         <td>
                             <!-- Form per eliminare una categoria -->
                             <form method="post" style="display:inline;">

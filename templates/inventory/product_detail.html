@@ -1,0 +1,27 @@
+{% extends "backoffice/backoffice_base.html" %}
+{% load static %}
+
+{% block dashboard_app %}
+<div class="container mt-4">
+    <h2 class="h4">Dettagli del Prodotto: {{ product.name }}</h2>
+
+    {% if product.image %}
+        <div class="mt-3 d-flex justify-content-center align-items-center">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="img-fluid" style="max-width: 300px; height: auto;">
+        </div>
+    {% endif %}
+
+    <div class="card mt-4">
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" name="update_product" class="btn bg-dark text-white">Salva Modifiche</button>
+                <button type="submit" name="delete_product" class="btn btn-danger">Elimina Prodotto</button>
+            </form>
+        </div>
+    </div>
+
+    <a href="{% url 'inventory:product_view' %}" class="btn btn-secondary mt-4">Torna alla Lista Prodotti</a>
+</div>
+{% endblock dashboard_app %}

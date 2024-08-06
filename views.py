@@ -144,6 +144,46 @@ class ProductView(LoginRequiredMixin, View):
         })
 
 
+class ProductDetailView(LoginRequiredMixin, View):
+    template_name = 'inventory/product_detail.html'
+
+    def get(self, request, product_id, *args, **kwargs):
+        product = get_object_or_404(Product, id=product_id)
+        form = ProductForm(instance=product)
+
+        return render(request, self.template_name, {
+            'product': product,
+            'form': form
+        })
+
+    def post(self, request, product_id, *args, **kwargs):
+        product = get_object_or_404(Product, id=product_id)
+
+        if 'update_product' in request.POST:
+            form = ProductForm(request.POST, request.FILES, instance=product)
+            if form.is_valid():
+                form.save()
+                messages.success(request, 'Prodotto aggiornato con successo!')
+                return redirect('inventory:product_detail', product_id=product.id)
+            else:
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"Errore nel campo '{field}': {error}")
+
+        elif 'delete_product' in request.POST:
+            product.delete()
+            messages.success(request, 'Prodotto eliminato con successo!')
+            return redirect('inventory:product_view')
+        
+        form = ProductForm(request.POST, request.FILES, instance=product)
+
+        return render(request, self.template_name, {
+            'product': product,
+            'form': form
+        })
+
+
+
 class SaleView(LoginRequiredMixin, View):
     template_name = 'inventory/sale.html'
     
