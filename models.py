@@ -93,6 +93,10 @@ class Transaction(models.Model):
     
     class Meta:
         abstract = True
+        indexes = [
+            models.Index(fields=['sale_date'], name='sale_date_idx'),
+        ]
+        ordering = ['sale_date']
 
     def clean(self):
         if self.sale_date and self.delivery_date and self.sale_date > self.delivery_date:

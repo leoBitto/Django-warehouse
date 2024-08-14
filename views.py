@@ -188,7 +188,7 @@ class SaleView(LoginRequiredMixin, View):
     template_name = 'inventory/sale.html'
     
     def get(self, request, *args, **kwargs):
-        sales = Sale.objects.all()
+        sales = Sale.objects.order_by('-sale_date')[:50]
         sales_info = []
 
         # Creare un modulo per ogni vendita
@@ -258,7 +258,7 @@ class OrderView(LoginRequiredMixin, View):
     template_name = 'inventory/order.html'
 
     def get(self, request, *args, **kwargs):
-        orders = Order.objects.all()
+        orders = Order.objects.order_by('-sale_date')[:50]
         orders_info = []
 
         # Creare un modulo per ogni ordine
