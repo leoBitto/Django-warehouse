@@ -39,7 +39,7 @@
                     <th>Fornitore</th>
                     <th>Prodotto</th>
                     <th>Quantità</th>
-                    <th>Prezzo Totale</th>
+                    <th>Prezzo Unità</th>
                     <th>Data Ordine</th>
                     <th>Azioni</th>
                 </tr>
@@ -50,9 +50,9 @@
                         <td>{{ info.order.supplier }}</td>
                         <td>{{ info.order.product.name }}</td>
                         <td>{{ info.order.quantity }}</td>
-                        <td>€{{ info.order.total_price }}</td>
-                        <td>{{ info.order.order_date }}</td>
-                        <td class="col-md-3">
+                        <td>€{{ info.order.unit_price }}</td>
+                        <td>{{ info.order.sale_date }}</td>
+                        <td class="col-md-2">
                             <!-- Form per eliminare un ordine -->
                             <form method="post" style="display:inline;">
                                 {% csrf_token %}

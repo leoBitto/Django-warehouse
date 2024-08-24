@@ -10,7 +10,7 @@ from django.utils import timezone
 from decimal import Decimal
 
 if 'crm' in settings.INSTALLED_APPS:
-    from crm.models import Customer, Supplier
+    from crm.models.base import Customer, Supplier
 else:
     Customer = None
     Supplier = None

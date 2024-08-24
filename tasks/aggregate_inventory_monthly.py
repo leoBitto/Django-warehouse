@@ -2,10 +2,10 @@ import logging
 from django.utils import timezone
 from django.db.models import Sum, F, Count
 from django.db import transaction
-from gold_bi.models import InventoryMonthlyAggregation
-from inventory.models import Product, Sale, Order
+from ..models.aggregated import InventoryMonthlyAggregation
+from inventory.models.base import Product, Sale, Order
 
-logger = logging.getLogger('gold_bi')
+logger = logging.getLogger('app')
 
 def aggregate_inventory_monthly():
     try:

@@ -1,7 +1,7 @@
 # inventory/urls.py
 
 from django.urls import path
-from .views import CategoryView, ProductView, SaleView, OrderView, ProductDetailView
+from .views.base import CategoryView, ProductView, SaleView, OrderView, ProductDetailView
 
 app_name = 'inventory'
 

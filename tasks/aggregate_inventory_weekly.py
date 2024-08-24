@@ -3,10 +3,10 @@ from django.utils import timezone
 from django.db.models import Sum, F, Count
 from django.db import transaction
 from django.db.models.functions import TruncWeek
-from gold_bi.models import InventoryWeeklyAggregation
-from inventory.models import Product, Sale, Order
+from ..models.aggregated import InventoryWeeklyAggregation
+from inventory.models.base import Product, Sale, Order
 
-logger = logging.getLogger('gold_bi')
+logger = logging.getLogger('app')
 
 def aggregate_inventory_weekly():
     try:

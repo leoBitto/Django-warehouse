@@ -40,19 +40,17 @@
                     <th>Categoria</th>
                     <th>Prezzo Unitario</th>
                     <th>Unità in magazzino</th>
-                    <th>Visibile nel sito</th>
                     <th>Azioni</th>
                 </tr>
             </thead>
             <tbody>
                 {% for info in product_forms %}
                     <tr class="product-item">
-                        <td><a class="link-secondary" href="{% url 'inventory:product_detail' info.product.id %}">{{ info.product.name }}</a></td>
+                        <td class="col-md-4"><a class="link-secondary" href="{% url 'inventory:product_detail' info.product.id %}">{{ info.product.name }}</a></td>
                         <td>{{ info.product.category.name }}</td>
                         <td>€{{ info.product.unit_price }}</td>
                         <td>{{ info.product.stock_quantity }}</td>
-                        <td>{{ info.product.is_visible }}</td>
-                        <td class="col-md-3">
+                        <td class="col-md-2">
                             <!-- Form per eliminare un prodotto -->
                             <form method="post" style="display:inline;">
                                 {% csrf_token %}
@@ -62,32 +60,36 @@
                                 </button>
                             </form>
 
-                            <!-- Pulsante per mostrare il form di modifica -->
-                            <button class="btn bg-dark text-white btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#updateForm-{{ info.product.id }}" aria-expanded="false" aria-controls="updateForm-{{ info.product.id }}">
+                            <!-- Pulsante per mostrare il modal di modifica -->
+                            <button class="btn bg-dark text-white btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#updateModal-{{ info.product.id }}">
                                 Modifica
                             </button>
                         </td>
                     </tr>
-                    <tr>
-                        <td colspan="4">
-                            <!-- Form per aggiornare un prodotto -->
-                            <div class="collapse mt-3" id="updateForm-{{ info.product.id }}">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <form method="post" enctype="multipart/form-data">
-                                            {% csrf_token %}
-                                            {{ info.form.as_p }}
-                                            <input type="hidden" name="product_id" value="{{ info.product.id }}">
-                                            <button type="submit" name="update_product" class="btn bg-dark text-white">Salva Modifiche</button>
-                                        </form>
-                                    </div>
+
+                    <!-- Modal per aggiornare il prodotto -->
+                    <div class="modal fade" id="updateModal-{{ info.product.id }}" tabindex="-1" aria-labelledby="updateModalLabel-{{ info.product.id }}" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="updateModalLabel-{{ info.product.id }}">Modifica Prodotto</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <form method="post" enctype="multipart/form-data">
+                                        {% csrf_token %}
+                                        {{ info.form.as_p }}
+                                        <input type="hidden" name="product_id" value="{{ info.product.id }}">
+                                        <button type="submit" name="update_product" class="btn bg-dark text-white">Salva Modifiche</button>
+                                    </form>
                                 </div>
                             </div>
-                        </td>
-                    </tr>
+                        </div>
+                    </div>
+
                 {% empty %}
                     <tr>
-                        <td colspan="4">Nessun prodotto disponibile.</td>
+                        <td colspan="6">Nessun prodotto disponibile.</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -100,7 +102,7 @@
     $(document).ready(function () {
         $('#searchInput').on('keyup', function () {
             var query = $(this).val().toLowerCase();
-            $('.product-item').each(function () {
+            $('#productTable tbody tr').each(function () {
                 var productName = $(this).find('td').first().text().toLowerCase(); // Nome del prodotto
                 if (productName.includes(query)) {
                     $(this).show();

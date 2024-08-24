@@ -3,8 +3,8 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from .models import Category, Product, Sale, Order
-from .forms import CategoryForm, ProductForm, SaleForm, OrderForm
+from ..models.base import Category, Product, Sale, Order
+from ..forms import CategoryForm, ProductForm, SaleForm, OrderForm
 from django.contrib import messages
 
 # inventory/views.py

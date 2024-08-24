@@ -39,7 +39,7 @@
                     <th>Cliente</th>
                     <th>Prodotto</th>
                     <th>Quantità</th>
-                    <th>Prezzo Totale</th>
+                    <th>Prezzo Unità</th>
                     <th>Data Vendita</th>
                     <th>Azioni</th>
                 </tr>
@@ -50,9 +50,9 @@
                         <td>{{ info.sale.customer }}</td>
                         <td>{{ info.sale.product.name }}</td>
                         <td>{{ info.sale.quantity }}</td>
-                        <td>€{{ info.sale.total_price }}</td>
+                        <td>€{{ info.sale.unit_price }}</td>
                         <td>{{ info.sale.sale_date }}</td>
-                        <td class="col-md-3">
+                        <td class="col-md-2">
                             <!-- Form per eliminare una vendita -->
                             <form method="post" style="display:inline;">
                                 {% csrf_token %}

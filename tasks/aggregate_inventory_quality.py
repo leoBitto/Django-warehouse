@@ -2,10 +2,10 @@ import logging
 from django.db.models import Count
 from django.utils import timezone
 from django.db import transaction
-from gold_bi.models import InventoryQualityAggregation
-from inventory.models import Product
+from ..models.aggregated import InventoryQualityAggregation
+from inventory.models.base import Product
 
-logger = logging.getLogger('gold_bi')
+logger = logging.getLogger('app')
 
 def aggregate_inventory_quality():
     try:

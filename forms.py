@@ -1,5 +1,5 @@
 from django import forms
-from .models import Category, Product, Sale, Order
+from .models.base import Category, Product, Sale, Order
 from decimal import Decimal
 
 class CategoryForm(forms.ModelForm):

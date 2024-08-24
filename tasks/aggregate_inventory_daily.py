@@ -2,10 +2,10 @@ import logging
 from django.utils import timezone
 from django.db.models import Sum, F, Count
 from django.db import transaction
-from gold_bi.models import InventoryDailyAggregation
-from inventory.models import Product, Sale, Order
+from ..models.aggregated import InventoryDailyAggregation
+from inventory.models.base import Product, Sale, Order
 
-logger = logging.getLogger('gold_bi')
+logger = logging.getLogger('app')
 
 def aggregate_inventory_daily():
     try:
