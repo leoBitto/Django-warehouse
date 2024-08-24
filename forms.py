@@ -1,6 +1,7 @@
 from django import forms
-from .models.base import Category, Product, Sale, Order
+from .models.base import Category, Product, Sale, Order, ProductImage
 from decimal import Decimal
+from django.forms import modelformset_factory
 
 class CategoryForm(forms.ModelForm):
     class Meta:
@@ -16,14 +17,13 @@ class ProductForm(forms.ModelForm):
         model = Product
         fields = [
             'name', 'category', 
-            'stock_quantity', 'unit_price', 'image', 'is_visible', 'description'
+            'stock_quantity', 'unit_price', 'is_visible', 'description'
         ]
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'category': forms.Select(attrs={'class': 'form-control'}),
             'stock_quantity': forms.NumberInput(attrs={'class': 'form-control', 'min': '0'}),
             'unit_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01', 'min': '0'}),
-            'image': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
             'is_visible': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
@@ -47,7 +47,14 @@ class ProductForm(forms.ModelForm):
             )
 
         return cleaned_data
+    
 
+ProductImageFormSet = modelformset_factory(
+    ProductImage, 
+    fields=('image',), 
+    extra=1, 
+    widgets={'image': forms.ClearableFileInput(attrs={'class': 'form-control-file'})}
+)
 
 
 
