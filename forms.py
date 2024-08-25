@@ -1,11 +1,10 @@
 from django import forms
-from .models.base import Category, Product, Sale, Order, ProductImage
+from .models.base import ProductCategory, Product, Sale, Order, ProductImage
 from decimal import Decimal
-from django.forms import modelformset_factory
 
-class CategoryForm(forms.ModelForm):
+class ProductCategoryForm(forms.ModelForm):
     class Meta:
-        model = Category
+        model = ProductCategory
         fields = ['name', 'parent']
         widgets = {
             'parent': forms.Select(attrs={'class': 'form-control'}),
@@ -16,8 +15,11 @@ class ProductForm(forms.ModelForm):
     class Meta:
         model = Product
         fields = [
-            'name', 'category', 
-            'stock_quantity', 'unit_price', 'is_visible', 'description'
+            'name', 
+            'category', 
+            'stock_quantity',
+            'is_visible', 
+            'description'
         ]
         widgets = {
             'name': forms.TextInput(attrs={'class': 'form-control'}),
@@ -28,33 +30,35 @@ class ProductForm(forms.ModelForm):
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
         }
     
-    def clean_unit_price(self):
-        unit_price = self.cleaned_data.get('unit_price')
-        if unit_price < Decimal('0'):
-            raise forms.ValidationError('Il prezzo unitario non può essere negativo.')
-        return unit_price
-    
     def clean(self):
         cleaned_data = super().clean()
-        
         is_visible = cleaned_data.get('is_visible')
-        image = cleaned_data.get('image')
         description = cleaned_data.get('description')
 
-        if is_visible and (not image or not description):
+        if is_visible and not description:
             raise forms.ValidationError(
-                'Il prodotto può essere reso visibile solo se è presente un\'immagine e una descrizione.'
+                'Il prodotto può essere reso visibile solo se è presente una descrizione.'
             )
 
         return cleaned_data
     
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        if commit:
+            instance.save()
+            for image in self.cleaned_data.get('images', []):
+                ProductImage.objects.create(product=instance, image=image)
+        return instance
+    
 
-ProductImageFormSet = modelformset_factory(
-    ProductImage, 
-    fields=('image',), 
-    extra=1, 
-    widgets={'image': forms.ClearableFileInput(attrs={'class': 'form-control-file'})}
-)
+class ProductImageForm(forms.ModelForm):
+    class Meta:
+        model = ProductImage
+        fields = ['image']  # Solo il campo immagine
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['image'].widget.attrs.update({'class': 'form-control-file'})
 
 
 
@@ -132,13 +136,16 @@ class TransactionForm(forms.ModelForm):
             instance.save()
         return instance
 
+
 class SaleForm(TransactionForm):
     class Meta(TransactionForm.Meta):
         model = Sale
-        fields = TransactionForm.Meta.fields + ['customer']
+        fields = TransactionForm.Meta.fields + ['customer', 'invoice', 'delivery_note']
         widgets = {
             **TransactionForm.Meta.widgets,
             'customer': forms.Select(attrs={'class': 'form-control'}),
+            'invoice': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
+            'delivery_note': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }
 
     def clean(self):
@@ -148,15 +155,19 @@ class SaleForm(TransactionForm):
         
         if product and quantity:
             if quantity > product.stock_quantity:
-                self.add_error('quantity', 'Quantità richiesta non disponibile in stock.')
+                self.add_error('quantity', 'Quantità richiesta non disponibile in stock. \n Se è stato effettuato un ordine del prodotto allora inserire il prodotto come consegnato.')
         
         return cleaned_data
+
 
 class OrderForm(TransactionForm):
     class Meta(TransactionForm.Meta):
         model = Order
-        fields = TransactionForm.Meta.fields + ['supplier']
+        fields = TransactionForm.Meta.fields + ['supplier', 'supplier_product_code', 'invoice', 'delivery_note']
         widgets = {
             **TransactionForm.Meta.widgets,
             'supplier': forms.Select(attrs={'class': 'form-control'}),
+            'supplier_product_code': forms.TextInput(attrs={'class': 'form-control'}),
+            'invoice': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
+            'delivery_note': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
         }

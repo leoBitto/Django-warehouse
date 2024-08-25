@@ -16,7 +16,7 @@ else:
     Supplier = None
 
 
-class Category(models.Model):
+class ProductCategory(models.Model):
     name = models.CharField(_("tipo"), max_length=50)
     parent = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='subcategories', verbose_name=_("categoria padre"))
 
@@ -29,21 +29,12 @@ class Category(models.Model):
     
 
 class Product(models.Model):
-    # se invece di avere dei prezzi come campi di acquisto e di vendita 
-    # creassi dei metodi per il calcolo dinamico di questi?
-    # un metodo che vede tutti gli ordini effettuati del prodotto e ne calcola il prezzo medio di acquisto
-    # un metodo che vede tutte le vendite effettuate del prodotto e ne calcola il prezzo medio di vendita
-    # un metodo che calcola la differenza tra questo calcolando il guadagno medio
-
-
     name = models.CharField(_("nome"), max_length=100)
     internal_code = models.CharField(_("codice interno"), max_length=50, unique=True, db_index=True, editable=False)
-    category = models.ForeignKey('Category', on_delete=models.SET_NULL, null=True, blank=True, related_name='products', verbose_name=_("categoria"))
+    category = models.ForeignKey('ProductCategory', on_delete=models.SET_NULL, null=True, blank=True, related_name='products', verbose_name=_("categoria"))
     stock_quantity = models.PositiveIntegerField(_("quantità in stock"), default=0)
-    unit_price = models.DecimalField(_("prezzo unitario"), max_digits=10, decimal_places=3)
     is_visible = models.BooleanField(_("visibile nel sito web"), default=False)
     description = models.TextField(_("descrizione"), blank=True, null=True)
-    average_purchase_price = models.DecimalField(_("prezzo medio d'acquisto"), max_digits=10, decimal_places=3, default=0)
 
     class Meta:
         verbose_name = _("prodotto")
@@ -54,13 +45,6 @@ class Product(models.Model):
 
     def __str__(self):
         return f"{self.name} ({self.internal_code})"
-    
-    def clean(self):
-        if self.unit_price < Decimal('0'):
-            raise ValidationError(_('Il prezzo unitario non può essere negativo.'))
-
-        if self.is_visible and (not self.description or not self.productimage_set.exists()):
-            raise ValidationError(_('Il prodotto può essere reso visibile solo se è presente un\'immagine e una descrizione.'))
 
     def save(self, *args, **kwargs):
         if not self.internal_code:
@@ -69,17 +53,43 @@ class Product(models.Model):
 
     def generate_internal_code(self):
         return f"PROD-{uuid.uuid4().hex[:8].upper()}"
+    
+    def calculate_average_purchase_price(self):
+        total_price = Decimal('0')
+        total_quantity = 0
+        for order in self.order_transactions.filter(status='delivered'):
+            total_price += order.unit_price * order.quantity
+            total_quantity += order.quantity
+        return total_price / total_quantity if total_quantity > 0 else Decimal('0')
 
-    def update_stock_and_purchase_price(self, purchase_price, quantity):
+    def calculate_average_sales_price(self):
+        total_price = Decimal('0')
+        total_quantity = 0
+        for sale in self.sale_transactions.filter(status='sold'):
+            total_price += sale.unit_price * sale.quantity
+            total_quantity += sale.quantity
+        return total_price / total_quantity if total_quantity > 0 else Decimal('0')
+
+    @property
+    def average_purchase_price(self):
+        return self.calculate_average_purchase_price()
+
+    @property
+    def average_sales_price(self):
+        return self.calculate_average_sales_price()
+
+    @property
+    def average_profit(self):
+        return (self.average_sales_price - self.average_purchase_price) if self.average_sales_price and self.average_purchase_price else Decimal('0')
+
+
+    def update_stock(self, quantity):
         if self.stock_quantity + quantity < 0:
             raise ValidationError(_('Quantità di stock insufficiente per l\'operazione.'))
-        # calcola il nuovo valore di prezzo medio con vecchia quantita e vecchio prezzo
-        # e usando il nuovo prezzo e la nuova quantita
-        total_value = (self.average_purchase_price * self.stock_quantity) + (purchase_price * quantity)
+
         # aggiorna la quantità
         self.stock_quantity += quantity
-        # aggiorna il prezzo medio di acquisto
-        self.average_purchase_price = total_value / self.stock_quantity if self.stock_quantity > 0 else Decimal('0')
+
         self.save()
 
 class ProductImage(models.Model):
@@ -178,6 +188,7 @@ class Sale(Transaction):
 
 class Order(Transaction):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, related_name='orders', verbose_name=_("fornitore"))
+    supplier_product_code = models.CharField(max_length=30, blank=True, null=True)
     invoice = models.FileField(_("Fattura"), upload_to='invoices/orders/', blank=True)
     delivery_note = models.FileField(_("Bolla di accompagnamento"), upload_to='delivery_notes/orders/', blank=True)
 
@@ -194,7 +205,7 @@ class Order(Transaction):
         if self.status == 'delivered':
             if original is None or original.status != 'delivered':
                 # Aggiorna lo stock e il prezzo medio di acquisto
-                self.product.update_stock_and_purchase_price(self.quantity)
+                self.product.update_stock(self.quantity)
 
         elif self.status == 'cancelled' and original and original.status == 'delivered':
             self.product.update_stock(-self.quantity)

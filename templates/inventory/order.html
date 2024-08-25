@@ -34,7 +34,7 @@
     <div class="mt-4">
         <h3 class="h5">Lista Ordini</h3>
         <table id="orderTable" class="table table-bordered w-100">
-            <thead>
+            <thead class="table-dark">
                 <tr>
                     <th>Fornitore</th>
                     <th>Prodotto</th>
@@ -50,22 +50,24 @@
                         <td>{{ info.order.supplier }}</td>
                         <td>{{ info.order.product.name }}</td>
                         <td>{{ info.order.quantity }}</td>
-                        <td>€{{ info.order.unit_price }}</td>
+                        <td>€{{ info.order.unit_price|floatformat:2 }}</td>
                         <td>{{ info.order.sale_date }}</td>
-                        <td class="col-md-2">
-                            <!-- Form per eliminare un ordine -->
-                            <form method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="order_id" value="{{ info.order.id }}">
-                                <button type="submit" name="delete_order" class="btn btn-danger btn-sm">
-                                    <i class="fas fa-trash-alt"></i>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <!-- Pulsante per mostrare il form di modifica -->
+                                <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="modal" data-bs-target="#updateModal-{{ info.order.id }}" aria-expanded="false" aria-controls="updateModal-{{ info.order.id }}">
+                                    <i class="fas fa-edit"></i> Modifica
                                 </button>
-                            </form>
 
-                            <!-- Pulsante per mostrare il form di modifica -->
-                            <button class="btn bg-dark text-white btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#updateModal-{{ info.order.id }}" aria-expanded="false" aria-controls="updateModal-{{ info.order.id }}">
-                                Modifica
-                            </button>
+                                <!-- Form per eliminare un ordine -->
+                                <form method="post" class="d-inline" onsubmit="return confirm('Sei sicuro di voler eliminare questo ordine?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="order_id" value="{{ info.order.id }}">
+                                    <button type="submit" name="delete_order" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
 

@@ -34,7 +34,7 @@
     <div class="mt-4">
         <h3 class="h5">Lista Vendite</h3>
         <table id="saleTable" class="table table-bordered w-100">
-            <thead>
+            <thead class="table-dark">
                 <tr>
                     <th>Cliente</th>
                     <th>Prodotto</th>
@@ -50,22 +50,24 @@
                         <td>{{ info.sale.customer }}</td>
                         <td>{{ info.sale.product.name }}</td>
                         <td>{{ info.sale.quantity }}</td>
-                        <td>€{{ info.sale.unit_price }}</td>
+                        <td>€{{ info.sale.unit_price|floatformat:2 }}</td>
                         <td>{{ info.sale.sale_date }}</td>
-                        <td class="col-md-2">
-                            <!-- Form per eliminare una vendita -->
-                            <form method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="sale_id" value="{{ info.sale.id }}">
-                                <button type="submit" name="delete_sale" class="btn btn-danger btn-sm">
-                                    <i class="fas fa-trash-alt"></i>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <!-- Pulsante per mostrare il form di modifica -->
+                                <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="modal" data-bs-target="#updateModal-{{ info.sale.id }}" aria-expanded="false" aria-controls="updateModal-{{ info.sale.id }}">
+                                    <i class="fas fa-edit"></i> Modifica
                                 </button>
-                            </form>
 
-                            <!-- Pulsante per mostrare il form di modifica -->
-                            <button class="btn bg-dark text-white btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#updateModal-{{ info.sale.id }}" aria-expanded="false" aria-controls="updateModal-{{ info.sale.id }}">
-                                Modifica
-                            </button>
+                                <!-- Form per eliminare una vendita -->
+                                <form method="post" class="d-inline" onsubmit="return confirm('Sei sicuro di voler eliminare questa vendita?');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="sale_id" value="{{ info.sale.id }}">
+                                    <button type="submit" name="delete_sale" class="btn btn-sm btn-outline-danger">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                            </div>
                         </td>
                     </tr>
 
@@ -90,7 +92,7 @@
                     </div>
                 {% empty %}
                     <tr>
-                        <td colspan="5">Nessuna vendita disponibile.</td>
+                        <td colspan="6">Nessuna vendita disponibile.</td>
                     </tr>
                 {% endfor %}
             </tbody>
@@ -99,19 +101,28 @@
 </div>
 
 <!-- Script di ricerca -->
+{% block extra_js %}
 <script>
     $(document).ready(function () {
-        $('#searchInput').on('keyup', function () {
+        var debounce = function(func, wait) {
+            var timeout;
+            return function() {
+                var context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    func.apply(context, args);
+                }, wait);
+            };
+        };
+
+        $('#searchInput').on('input', debounce(function () {
             var query = $(this).val().toLowerCase();
             $('.sale-item').each(function () {
-                var saleProduct = $(this).find('td').first().text().toLowerCase(); // Nome del prodotto della vendita
-                if (saleProduct.includes(query)) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
+                var saleText = $(this).text().toLowerCase();
+                $(this).toggle(saleText.indexOf(query) > -1);
             });
-        });
+        }, 300));
     });
 </script>
+{% endblock extra_js %}
 {% endblock dashboard_app %}

@@ -34,7 +34,7 @@
     <div class="mt-4">
         <h3 class="h5">Lista Categorie Prodotto</h3>
         <table id="categoryTable" class="table table-bordered w-100">
-            <thead>
+            <thead class="table-dark">
                 <tr>
                     <th>Nome</th>
                     <th>Categoria Superiore</th>
@@ -47,19 +47,21 @@
                         <td>{{ info.category.name }}</td>
                         <td>{{ info.category.parent }}</td>
                         <td class="col-md-2">
-                            <!-- Form per eliminare una categoria -->
-                            <form method="post" style="display:inline;">
-                                {% csrf_token %}
-                                <input type="hidden" name="category_id" value="{{ info.category.id }}">
-                                <button type="submit" name="delete_category" class="btn btn-danger btn-sm">
-                                    <i class="fas fa-trash-alt"></i>
+                            <div class="btn-group" role="group">
+                                <!-- Form per eliminare una categoria -->
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="category_id" value="{{ info.category.id }}">
+                                    <button type="submit" name="delete_category" class="btn btn-danger btn-sm" onclick="return confirm('Sei sicuro di voler eliminare questa categoria?');">
+                                        <i class="fas fa-trash-alt"></i>
+                                    </button>
+                                </form>
+                        
+                                <!-- Pulsante per mostrare il modal di modifica -->
+                                <button class="btn btn-dark text-white btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#updateModal-{{ info.category.id }}">
+                                    <i class="fas fa-edit"></i> Modifica
                                 </button>
-                            </form>
-
-                            <!-- Pulsante per mostrare il modal di modifica -->
-                            <button class="btn bg-dark text-white btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#updateModal-{{ info.category.id }}">
-                                Modifica
-                            </button>
+                            </div>
                         </td>
                     </tr>
 

@@ -3,26 +3,27 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from ..models.base import Category, Product, Sale, Order
-from ..forms import CategoryForm, ProductForm, SaleForm, OrderForm
+from ..models.base import ProductCategory, Product, Sale, Order, ProductImage
+from ..forms import ProductCategoryForm, ProductForm, SaleForm, OrderForm, ProductImageForm
 from django.contrib import messages
+from django.forms import modelformset_factory
 
 # inventory/views.py
 
-class CategoryView(LoginRequiredMixin, View):
-    template_name = 'inventory/category.html'
+class ProductCategoryView(LoginRequiredMixin, View):
+    template_name = 'inventory/product_category.html'
 
     def get(self, request, *args, **kwargs):
-        categories = Category.objects.all()
+        categories = ProductCategory.objects.all()
         category_info = []
 
         # Creare un modulo per ogni categoria
         for category in categories:
-            form = CategoryForm(instance=category)
+            form = ProductCategoryForm(instance=category)
             category_info.append({'category': category, 'form': form})
 
         # Aggiungere un modulo vuoto per la creazione di nuove categorie
-        create_form = CategoryForm()
+        create_form = ProductCategoryForm()
 
         return render(request, self.template_name, {
             'category_info': category_info,
@@ -31,11 +32,11 @@ class CategoryView(LoginRequiredMixin, View):
 
     def post(self, request, *args, **kwargs):
         if 'create_category' in request.POST:
-            create_form = CategoryForm(request.POST)
+            create_form = ProductCategoryForm(request.POST)
             if create_form.is_valid():
                 create_form.save()
                 messages.success(request, 'Categoria creata con successo!')
-                return redirect('inventory:category_view')
+                return redirect('inventory:product_category_view')
             else:
                 for field, errors in create_form.errors.items():
                     for error in errors:
@@ -43,12 +44,12 @@ class CategoryView(LoginRequiredMixin, View):
 
         elif 'update_category' in request.POST:
             category_id = request.POST.get('category_id')
-            category = get_object_or_404(Category, id=category_id)
-            form = CategoryForm(request.POST, instance=category)
+            category = get_object_or_404(ProductCategory, id=category_id)
+            form = ProductCategoryForm(request.POST, instance=category)
             if form.is_valid():
                 form.save()
                 messages.success(request, 'Categoria aggiornata con successo!')
-                return redirect('inventory:category_view')
+                return redirect('inventory:product_category_view')
             else:
                 for field, errors in form.errors.items():
                     for error in errors:
@@ -56,20 +57,20 @@ class CategoryView(LoginRequiredMixin, View):
 
         elif 'delete_category' in request.POST:
             category_id = request.POST.get('category_id')
-            category = get_object_or_404(Category, id=category_id)
+            category = get_object_or_404(ProductCategory, id=category_id)
             category.delete()
             messages.success(request, 'Categoria eliminata con successo!')
-            return redirect('inventory:category_view')
+            return redirect('inventory:product_category_view')
 
         # Se si arriva qui, non è stato fatto nulla di valido
-        categories = Category.objects.all()
+        categories = ProductCategory.objects.all()
         category_info = []
 
         for category in categories:
-            form = CategoryForm(instance=category)
+            form = ProductCategoryForm(instance=category)
             category_info.append({'category': category, 'form': form})
 
-        create_form = CategoryForm()
+        create_form = ProductCategoryForm()
 
         return render(request, self.template_name, {
             'category_info': category_info,
@@ -149,24 +150,32 @@ class ProductDetailView(LoginRequiredMixin, View):
 
     def get(self, request, product_id, *args, **kwargs):
         product = get_object_or_404(Product, id=product_id)
-        form = ProductForm(instance=product)
+        product_form = ProductForm(instance=product)
+        image_form = ProductImageForm()
+
+        orders = product.order_transactions.all()
+        sales = product.sale_transactions.all()
 
         return render(request, self.template_name, {
             'product': product,
-            'form': form
+            'product_form': product_form,
+            'image_form': image_form,
+            'orders': orders,
+            'sales': sales,
         })
 
     def post(self, request, product_id, *args, **kwargs):
         product = get_object_or_404(Product, id=product_id)
+        product_form = ProductForm(request.POST, request.FILES, instance=product)
+        image_form = ProductImageForm(request.POST, request.FILES)
 
         if 'update_product' in request.POST:
-            form = ProductForm(request.POST, request.FILES, instance=product)
-            if form.is_valid():
-                form.save()
+            if product_form.is_valid():
+                product_form.save()
                 messages.success(request, 'Prodotto aggiornato con successo!')
                 return redirect('inventory:product_detail', product_id=product.id)
             else:
-                for field, errors in form.errors.items():
+                for field, errors in product_form.errors.items():
                     for error in errors:
                         messages.error(request, f"Errore nel campo '{field}': {error}")
 
@@ -174,14 +183,32 @@ class ProductDetailView(LoginRequiredMixin, View):
             product.delete()
             messages.success(request, 'Prodotto eliminato con successo!')
             return redirect('inventory:product_view')
-        
-        form = ProductForm(request.POST, request.FILES, instance=product)
+
+        elif 'add_images' in request.POST:
+            if image_form.is_valid():
+                image = image_form.save(commit=False)
+                image.product = product
+                image.save()
+                messages.success(request, 'Immagine aggiunta con successo!')
+                return redirect('inventory:product_detail', product_id=product.id)
+            else:
+                for form in image_form:
+                    for field, errors in form.errors.items():
+                        for error in errors:
+                            messages.error(request, f"Errore nel campo immagine '{field}': {error}")
+
+        elif 'delete_image' in request.POST:
+            image_id = request.POST.get('image_id')
+            image = get_object_or_404(ProductImage, id=image_id, product=product)
+            image.delete()
+            messages.success(request, 'Immagine eliminata con successo!')
+            return redirect('inventory:product_detail', product_id=product.id)
 
         return render(request, self.template_name, {
             'product': product,
-            'form': form
+            'product_form': product_form,
+            'image_form': image_form,
         })
-
 
 
 class SaleView(LoginRequiredMixin, View):

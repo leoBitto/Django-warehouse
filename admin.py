@@ -1,9 +1,9 @@
 from django.contrib import admin
-from .models.base import Category, Product, Sale, Order
+from .models.base import ProductCategory, Product, Sale, Order
 from django.db import transaction
 
-@admin.register(Category)
-class CategoryAdmin(admin.ModelAdmin):
+@admin.register(ProductCategory)
+class ProductCategoryAdmin(admin.ModelAdmin):
     list_display = ('name', 'parent')
     search_fields = ('name',)
     list_filter = ('parent',)
@@ -11,12 +11,19 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ('name', 'internal_code', 'category', 'stock_quantity', 'unit_price', 'is_visible')
+    list_display = ('name',
+                    'internal_code', 
+                    'category', 
+                    'stock_quantity', 
+                    'average_purchase_price', 
+                    'average_sales_price',
+                    'average_profit',
+                    'is_visible')
     search_fields = ('name', 'internal_code', 'category__name')
     list_filter = ('category', 'is_visible')
     ordering = ('name',)
-    readonly_fields = ('internal_code',)
-    fields = ('name', 'internal_code', 'category', 'stock_quantity', 'unit_price', 'image', 'is_visible', 'description')
+    readonly_fields = ('internal_code', 'average_purchase_price', 'average_sales_price', 'average_profit')
+    fields = ('name', 'internal_code', 'category', 'stock_quantity', 'is_visible', 'description')
 
     def save_model(self, request, obj, form, change):
         # Assicurarsi che il codice interno venga generato solo quando si crea un nuovo prodotto
