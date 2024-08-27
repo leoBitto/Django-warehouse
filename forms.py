@@ -140,7 +140,7 @@ class TransactionForm(forms.ModelForm):
 class SaleForm(TransactionForm):
     class Meta(TransactionForm.Meta):
         model = Sale
-        fields = TransactionForm.Meta.fields + ['customer', 'invoice', 'delivery_note']
+        fields =  ['customer'] + TransactionForm.Meta.fields + ['invoice', 'delivery_note']
         widgets = {
             **TransactionForm.Meta.widgets,
             'customer': forms.Select(attrs={'class': 'form-control'}),
@@ -163,7 +163,7 @@ class SaleForm(TransactionForm):
 class OrderForm(TransactionForm):
     class Meta(TransactionForm.Meta):
         model = Order
-        fields = TransactionForm.Meta.fields + ['supplier', 'supplier_product_code', 'invoice', 'delivery_note']
+        fields = ['supplier', 'supplier_product_code'] + TransactionForm.Meta.fields + ['invoice', 'delivery_note']
         widgets = {
             **TransactionForm.Meta.widgets,
             'supplier': forms.Select(attrs={'class': 'form-control'}),

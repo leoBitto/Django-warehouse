@@ -4,17 +4,22 @@
 {% block dashboard_app %}
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="h4">Ordini</h2>
-        <button class="btn bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#createOrderForm" aria-expanded="false" aria-controls="createOrderForm">
+        <button class="btn bg-dark text-white" type="button" data-bs-toggle="modal" data-bs-target="#createOrderModal">
             Aggiungi Ordine
         </button>
     </div>
 
-    <div class="mb-4">
-        <div class="collapse mt-3" id="createOrderForm">
-            <div class="card">
-                <div class="card-body">
+    <!-- Modal per la creazione di un ordine -->
+    <div class="modal fade w-80" id="createOrderModal" tabindex="-1" aria-labelledby="createOrderModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createOrderModalLabel">Nuovo Ordine</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         {{ create_form.as_p }}
@@ -26,12 +31,12 @@
     </div>
 
     <!-- Campo di ricerca -->
-    <div class="m-3">
+    <div class="mb-4">
         <input type="text" id="searchInput" class="form-control" placeholder="Cerca ordine...">
     </div>
 
     <!-- Tabella degli ordini -->
-    <div class="mt-4">
+    <div>
         <h3 class="h5">Lista Ordini</h3>
         <table id="orderTable" class="table table-bordered w-100">
             <thead class="table-dark">
@@ -45,52 +50,21 @@
                 </tr>
             </thead>
             <tbody>
-                {% for info in order_forms %}
+                {% for order in orders %}
                     <tr class="order-item">
-                        <td>{{ info.order.supplier }}</td>
-                        <td>{{ info.order.product.name }}</td>
-                        <td>{{ info.order.quantity }}</td>
-                        <td>€{{ info.order.unit_price|floatformat:2 }}</td>
-                        <td>{{ info.order.sale_date }}</td>
+                        <td>{{ order.supplier }}</td>
+                        <td>{{ order.product.name }}</td>
+                        <td>{{ order.quantity }}</td>
+                        <td>€{{ order.unit_price|floatformat:2 }}</td>
+                        <td>{{ order.sale_date|date:"d/m/Y" }}</td> <!-- Formato data italiano -->
                         <td>
                             <div class="btn-group" role="group">
-                                <!-- Pulsante per mostrare il form di modifica -->
-                                <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="modal" data-bs-target="#updateModal-{{ info.order.id }}" aria-expanded="false" aria-controls="updateModal-{{ info.order.id }}">
+                                <a href="{% url 'inventory:order_detail' order.id %}" class="btn btn-sm btn-outline-dark">
                                     <i class="fas fa-edit"></i> Modifica
-                                </button>
-
-                                <!-- Form per eliminare un ordine -->
-                                <form method="post" class="d-inline" onsubmit="return confirm('Sei sicuro di voler eliminare questo ordine?');">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="order_id" value="{{ info.order.id }}">
-                                    <button type="submit" name="delete_order" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
+                                </a>
                             </div>
                         </td>
                     </tr>
-
-                    <!-- Modal per aggiornare l'ordine -->
-                    <div class="modal fade" id="updateModal-{{ info.order.id }}" tabindex="-1" aria-labelledby="updateModalLabel-{{ info.order.id }}" aria-hidden="true">
-                        <div class="modal-dialog modal-lg">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="updateModalLabel-{{ info.order.id }}">Modifica Ordine</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <form method="post" enctype="multipart/form-data">
-                                        {% csrf_token %}
-                                        {{ info.form.as_p }}
-                                        <input type="hidden" name="order_id" value="{{ info.order.id }}">
-                                        <button type="submit" name="update_order" class="btn bg-dark text-white">Salva Modifiche</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                 {% empty %}
                     <tr>
                         <td colspan="6">Nessun ordine disponibile.</td>
@@ -102,19 +76,28 @@
 </div>
 
 <!-- Script di ricerca -->
+{% block extra_js %}
 <script>
     $(document).ready(function () {
-        $('#searchInput').on('keyup', function () {
+        var debounce = function(func, wait) {
+            var timeout;
+            return function() {
+                var context = this, args = arguments;
+                clearTimeout(timeout);
+                timeout = setTimeout(function() {
+                    func.apply(context, args);
+                }, wait);
+            };
+        };
+
+        $('#searchInput').on('input', debounce(function () {
             var query = $(this).val().toLowerCase();
             $('.order-item').each(function () {
-                var orderCustomer = $(this).find('td').first().text().toLowerCase(); // Nome del cliente dell'ordine
-                if (orderCustomer.includes(query)) {
-                    $(this).show();
-                } else {
-                    $(this).hide();
-                }
+                var orderText = $(this).text().toLowerCase();
+                $(this).toggle(orderText.indexOf(query) > -1);
             });
-        });
+        }, 300));
     });
 </script>
+{% endblock extra_js %}
 {% endblock dashboard_app %}

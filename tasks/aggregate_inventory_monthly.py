@@ -1,6 +1,6 @@
 import logging
 from django.utils import timezone
-from django.db.models import Sum, F, Count
+from django.db.models import Sum, F
 from django.db import transaction
 from ..models.aggregated import InventoryMonthlyAggregation
 from inventory.models.base import Product, Sale, Order
@@ -9,54 +9,33 @@ logger = logging.getLogger('app')
 
 def aggregate_inventory_monthly():
     try:
-        # Ottieni la data attuale e calcola l'inizio e la fine del mese
         now = timezone.now()
-        date = now.date()
-        start_of_period = date.replace(day=1)
-        end_of_period = (start_of_period.replace(day=28) + timezone.timedelta(days=4)).replace(day=1) - timezone.timedelta(days=1)
+        first_day_of_month = now.replace(day=1)
+        last_day_of_month = (first_day_of_month + timezone.timedelta(days=32)).replace(day=1) - timezone.timedelta(days=1)
 
-        # Ottieni l'anno e il mese per l'aggregazione
-        year = now.year
-        month = now.month
+        def aggregate(queryset, field):
+            return queryset.filter(sale_date__month=now.month, sale_date__year=now.year).aggregate(total=Sum(field))['total'] or 0
 
-        # Aggregazione dei dati di prodotto
+        # Aggrega i dati mensili
         distinct_products_in_stock = Product.objects.using('default').filter(stock_quantity__gt=0).count()
+        total_stock_value = aggregate(Product.objects.using('default'), F('stock_quantity') * F('unit_price'))
 
-        total_stock_value = Product.objects.using('default').aggregate(
-            total_value=Sum(F('stock_quantity') * F('unit_price'))
-        )['total_value'] or 0
+        total_sold_units = aggregate(Sale.objects.using('default'), 'quantity')
+        total_sales_value = aggregate(Sale.objects.using('default'), F('quantity') * F('unit_price'))
 
-        # Aggregazione delle vendite del mese
-        total_sold_units = Sale.objects.using('default').filter(
-            sale_date__range=[start_of_period, end_of_period]
-        ).aggregate(total_units=Sum('quantity'))['total_units'] or 0
+        total_pending_sales = Sale.objects.using('default').filter(status='pending', sale_date__range=[first_day_of_month, last_day_of_month]).count()
+        total_delivered_sales = Sale.objects.using('default').filter(status='delivered', delivery_date__range=[first_day_of_month, last_day_of_month]).count()
+        total_paid_sales = Sale.objects.using('default').filter(status='paid', payment_date__range=[first_day_of_month, last_day_of_month]).count()
+        total_cancelled_sales = Sale.objects.using('default').filter(status='cancelled', sale_date__range=[first_day_of_month, last_day_of_month]).count()
 
-        total_sales_value = Sale.objects.using('default').filter(
-            sale_date__range=[start_of_period, end_of_period]
-        ).aggregate(total_sales=Sum(F('quantity') * F('unit_price')))['total_sales'] or 0
+        total_ordered_units = aggregate(Order.objects.using('default'), 'quantity')
+        total_orders_value = aggregate(Order.objects.using('default'), F('quantity') * F('unit_price'))
 
-        # Aggregazione dello stato delle transazioni per Sales
-        total_pending_sales = Sale.objects.using('default').filter(status='pending', sale_date__range=[start_of_period, end_of_period]).count()
-        total_delivered_sales = Sale.objects.using('default').filter(status='delivered', delivery_date__range=[start_of_period, end_of_period]).count()
-        total_paid_sales = Sale.objects.using('default').filter(status='paid', payment_date__range=[start_of_period, end_of_period]).count()
-        total_cancelled_sales = Sale.objects.using('default').filter(status='cancelled', sale_date__range=[start_of_period, end_of_period]).count()
+        total_pending_orders = Order.objects.using('default').filter(status='pending', sale_date__range=[first_day_of_month, last_day_of_month]).count()
+        total_delivered_orders = Order.objects.using('default').filter(status='delivered', delivery_date__range=[first_day_of_month, last_day_of_month]).count()
+        total_paid_orders = Order.objects.using('default').filter(status='paid', payment_date__range=[first_day_of_month, last_day_of_month]).count()
+        total_cancelled_orders = Order.objects.using('default').filter(status='cancelled', sale_date__range=[first_day_of_month, last_day_of_month]).count()
 
-        # Aggregazione delle unità ordinate e del loro valore
-        total_ordered_units = Order.objects.using('default').filter(
-            sale_date__range=[start_of_period, end_of_period]
-        ).aggregate(total_units=Sum('quantity'))['total_units'] or 0
-
-        total_orders_value = Order.objects.using('default').filter(
-            sale_date__range=[start_of_period, end_of_period]
-        ).aggregate(total_orders=Sum(F('quantity') * F('unit_price')))['total_orders'] or 0
-
-        # Aggregazione dello stato delle transazioni per Orders
-        total_pending_orders = Order.objects.using('default').filter(status='pending', sale_date__range=[start_of_period, end_of_period]).count()
-        total_delivered_orders = Order.objects.using('default').filter(status='delivered', delivery_date__range=[start_of_period, end_of_period]).count()
-        total_paid_orders = Order.objects.using('default').filter(status='paid', payment_date__range=[start_of_period, end_of_period]).count()
-        total_cancelled_orders = Order.objects.using('default').filter(status='cancelled', sale_date__range=[start_of_period, end_of_period]).count()
-
-        # Creazione del dizionario per l'aggregazione
         inventory_aggregations = {
             'distinct_products_in_stock': distinct_products_in_stock,
             'total_stock_value': total_stock_value,
@@ -74,18 +53,13 @@ def aggregate_inventory_monthly():
             'total_cancelled_orders': total_cancelled_orders,
         }
 
-        # Aggiornamento o creazione del record nel modello InventoryMonthlyAggregation
         with transaction.atomic(using='gold'):
-            obj, created = InventoryMonthlyAggregation.objects.using('gold').get_or_create(
-                year=year,
-                month=month
+            obj, created = InventoryMonthlyAggregation.objects.using('gold').update_or_create(
+                month=now.month,
+                year=now.year,
+                defaults=inventory_aggregations
             )
-            
-            # Aggiorna i campi con i valori aggregati
-            for field, value in inventory_aggregations.items():
-                setattr(obj, field, value)
-            obj.save()
 
-        logger.info(f'Inventory monthly aggregation for {year}-{month} completed successfully.')
+        logger.info(f'Inventory monthly aggregation for {now.month}/{now.year} completed successfully. Created: {created}')
     except Exception as e:
-        logger.error(f'Error in inventory monthly aggregation for {year}-{month}: {e}')
+        logger.error(f'Error in inventory monthly aggregation: {e}')

@@ -6,7 +6,9 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from ..models.base import ProductCategory, Product, Sale, Order, ProductImage
 from ..forms import ProductCategoryForm, ProductForm, SaleForm, OrderForm, ProductImageForm
 from django.contrib import messages
-from django.forms import modelformset_factory
+import csv
+from django.http import HttpResponse
+from datetime import datetime
 
 # inventory/views.py
 
@@ -211,23 +213,36 @@ class ProductDetailView(LoginRequiredMixin, View):
         })
 
 
-class SaleView(LoginRequiredMixin, View):
-    template_name = 'inventory/sale.html'
-    
+class DownloadStockDataCSV(View):
+
     def get(self, request, *args, **kwargs):
-        sales = Sale.objects.order_by('-sale_date')[:50]
-        sales_info = []
+        # Creazione della risposta HTTP con tipo di contenuto CSV
+        response = HttpResponse(content_type='text/csv')
+        current_date = datetime.now().strftime("%Y-%m-%d")
+        response['Content-Disposition'] = f'attachment; filename="magazzino_{current_date}.csv"'
 
-        # Creare un modulo per ogni vendita
-        for sale in sales:
-            form = SaleForm(instance=sale)
-            sales_info.append({'sale': sale, 'form': form})
+        # Scrittura del contenuto CSV
+        writer = csv.writer(response)
+        writer.writerow(['Nome Prodotto', 'Quantità in Magazzino', 'Valore Stock'])
 
-        # Aggiungere un modulo vuoto per la creazione di nuove vendite
+        products = Product.objects.all()
+        for product in products:
+            stock_value = product.stock_quantity * product.average_purchase_price
+            writer.writerow([product.name, product.stock_quantity, f'€{stock_value:.2f}'])
+
+        return response
+    
+
+
+class SaleListView(LoginRequiredMixin, View):
+    template_name = 'inventory/sale.html'
+
+    def get(self, request, *args, **kwargs):
+        sales = Sale.objects.order_by('-sale_date')[:100]  # Mostra le ultime 100 vendite
         create_form = SaleForm()
 
         return render(request, self.template_name, {
-            'sale_forms': sales_info,
+            'sales': sales,
             'create_form': create_form,
         })
 
@@ -237,114 +252,102 @@ class SaleView(LoginRequiredMixin, View):
             if create_form.is_valid():
                 create_form.save()
                 messages.success(request, 'Vendita registrata con successo!')
-                return redirect('inventory:sale_view')
             else:
                 for field, errors in create_form.errors.items():
                     for error in errors:
                         messages.error(request, f"Errore nel campo '{field}': {error}")
+            return redirect('inventory:sale_list')
+    
 
+class SaleDetailView(LoginRequiredMixin, View):
+    template_name = 'inventory/sale_detail.html'
 
-        elif 'update_sale' in request.POST:
-            sale_id = request.POST.get('sale_id')
-            sale = get_object_or_404(Sale, id=sale_id)
+    def get(self, request, *args, **kwargs):
+        sale_id = kwargs.get('sale_id')
+        sale = get_object_or_404(Sale, id=sale_id)
+        form = SaleForm(instance=sale)
+
+        return render(request, self.template_name, {
+            'sale': sale,
+            'form': form,
+        })
+
+    def post(self, request, *args, **kwargs):
+        sale_id = request.POST.get('sale_id')
+        sale = get_object_or_404(Sale, id=sale_id)
+
+        if 'update_sale' in request.POST:
             form = SaleForm(request.POST, request.FILES, instance=sale)
-
             if form.is_valid():
                 form.save()
                 messages.success(request, 'Vendita aggiornata con successo!')
-                return redirect('inventory:sale_view')
             else:
                 for field, errors in form.errors.items():
                     for error in errors:
                         messages.error(request, f"Errore nel campo '{field}': {error}")
-
+            return redirect('inventory:sale_list')
 
         elif 'delete_sale' in request.POST:
-            sale_id = request.POST.get('sale_id')
-            sale = get_object_or_404(Sale, id=sale_id)
             sale.delete()
             messages.success(request, 'Vendita eliminata con successo!')
-            return redirect('inventory:sale_view')
+            return redirect('inventory:sale_list')
 
-        # Ricarica le vendite e i form se non è stato fatto nulla di valido
-        sales = Sale.objects.all()
-        sales_info = []
-        for sale in sales:
-            form = SaleForm(instance=sale)
-            sales_info.append({'sale': sale, 'form': form})
 
-        create_form = SaleForm()
-
-        return render(request, self.template_name, {
-            'sale_forms': sales_info,
-            'create_form': create_form
-        })
-    
-
-class OrderView(LoginRequiredMixin, View):
+class OrderListView(LoginRequiredMixin, View):
     template_name = 'inventory/order.html'
 
     def get(self, request, *args, **kwargs):
-        orders = Order.objects.order_by('-sale_date')[:50]
-        orders_info = []
-
-        # Creare un modulo per ogni ordine
-        for order in orders:
-            form = OrderForm(instance=order)
-            orders_info.append({'order': order, 'form': form})
-
-        # Aggiungere un modulo vuoto per la creazione di nuovi ordini
+        orders = Order.objects.order_by('-sale_date')[:100]  # Mostra le ultime 100 vendite
         create_form = OrderForm()
 
         return render(request, self.template_name, {
-            'order_forms': orders_info,
+            'orders': orders,
             'create_form': create_form,
         })
 
     def post(self, request, *args, **kwargs):
         if 'create_order' in request.POST:
             create_form = OrderForm(request.POST, request.FILES)
-
             if create_form.is_valid():
-                order = create_form.save()
+                create_form.save()
                 messages.success(request, 'Ordine creato con successo!')
-                return redirect('inventory:order_view')
+                return redirect('inventory:order_list')
             else:
                 for field, errors in create_form.errors.items():
                     for error in errors:
                         messages.error(request, f"Errore nel campo '{field}': {error}")
+        return redirect('inventory:order_list')
+    
 
-        elif 'update_order' in request.POST:
-            order_id = request.POST.get('order_id')
-            order = get_object_or_404(Order, id=order_id)
+class OrderDetailView(LoginRequiredMixin, View):
+    template_name = 'inventory/order_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        order_id = kwargs.get('order_id')
+        order = get_object_or_404(Order, id=order_id)
+        form = OrderForm(instance=order)
+
+        return render(request, self.template_name, {
+            'order': order,
+            'form': form,
+        })
+
+    def post(self, request, *args, **kwargs):
+        order_id = request.POST.get('order_id')
+        order = get_object_or_404(Order, id=order_id)
+
+        if 'update_order' in request.POST:
             form = OrderForm(request.POST, request.FILES, instance=order)
-
             if form.is_valid():
                 form.save()
                 messages.success(request, 'Ordine aggiornato con successo!')
-                return redirect('inventory:order_view')
             else:
                 for field, errors in form.errors.items():
                     for error in errors:
                         messages.error(request, f"Errore nel campo '{field}': {error}")
+            return redirect('inventory:order_list')
 
         elif 'delete_order' in request.POST:
-            order_id = request.POST.get('order_id')
-            order = get_object_or_404(Order, id=order_id)
             order.delete()
             messages.success(request, 'Ordine eliminato con successo!')
-            return redirect('inventory:order_view')
-
-        # Ricarica gli ordini e i form se non è stato fatto nulla di valido
-        orders = Order.objects.all()
-        orders_info = []
-        for order in orders:
-            form = OrderForm(instance=order)
-            orders_info.append({'order': order, 'form': form})
-
-        create_form = OrderForm()
-
-        return render(request, self.template_name, {
-            'order_forms': orders_info,
-            'create_form': create_form
-        })
+            return redirect('inventory:order_list')

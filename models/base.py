@@ -57,7 +57,7 @@ class Product(models.Model):
     def calculate_average_purchase_price(self):
         total_price = Decimal('0')
         total_quantity = 0
-        for order in self.order_transactions.filter(status='delivered'):
+        for order in self.order_transactions.filter(status='paid'):
             total_price += order.unit_price * order.quantity
             total_quantity += order.quantity
         return total_price / total_quantity if total_quantity > 0 else Decimal('0')
@@ -65,7 +65,7 @@ class Product(models.Model):
     def calculate_average_sales_price(self):
         total_price = Decimal('0')
         total_quantity = 0
-        for sale in self.sale_transactions.filter(status='sold'):
+        for sale in self.sale_transactions.filter(status='paid'):
             total_price += sale.unit_price * sale.quantity
             total_quantity += sale.quantity
         return total_price / total_quantity if total_quantity > 0 else Decimal('0')
@@ -188,7 +188,7 @@ class Sale(Transaction):
 
 class Order(Transaction):
     supplier = models.ForeignKey(Supplier, on_delete=models.CASCADE, null=True, blank=True, related_name='orders', verbose_name=_("fornitore"))
-    supplier_product_code = models.CharField(max_length=30, blank=True, null=True)
+    supplier_product_code = models.CharField(_("Codice Interno del Fornitore"),max_length=30, blank=True, null=True)
     invoice = models.FileField(_("Fattura"), upload_to='invoices/orders/', blank=True)
     delivery_note = models.FileField(_("Bolla di accompagnamento"), upload_to='delivery_notes/orders/', blank=True)
 

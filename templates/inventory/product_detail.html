@@ -3,7 +3,10 @@
 
 {% block dashboard_app %}
 <div class="container mt-4">
-    <h2 class="h4">Dettagli del Prodotto: {{ product.name }}</h2>
+    <div class="d-flex flex-row justify-content-around">
+        <h2 class="h4">Dettagli del Prodotto: {{ product.name }}</h2>
+        <a href="{% url 'inventory:product_view' %}" class="btn btn-dark">Torna alla Lista Prodotti</a>
+    </div>
 
     <div class="row mt-4">
         <!-- Sezione per le immagini -->
@@ -38,7 +41,7 @@
             </div>
         </div>
 
-        <!-- Dettagli del prodotto e transazioni -->
+        <!-- Dettagli del prodotto -->
         <div class="col-md-6">
             <!-- Dettagli del prodotto -->
             <div class="card mb-4">
@@ -53,60 +56,57 @@
                     </form>
                 </div>
             </div>
-
-            <!-- Sezione per le Transazioni -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <h5 class="h5">Transazioni Associate</h5>
-                </div>
-                <div class="card-body">
-                    <!-- Ordini -->
-                    <h6 class="h6">Ordini</h6>
-                    <ul class="list-group mb-3">
-                        {% for order in orders %}
-                            <li class="list-group-item">
-                                <strong>
-                                    {% if order.customer %}
-                                        {{ order.customer.name }}
-                                    {% else %}
-                                        Fornitore Sconosciuto
-                                    {% endif %}
-                                </strong> - {{ order.quantity }} pezzi a {{ order.unit_price }}€
-                                <span class="badge bg-info">{{ order.status }}</span>
-                                <br>
-                                Data: {{ order.sale_date|date:"d M Y" }}
-                            </li>
-                        {% empty %}
-                            <li class="list-group-item text-muted">Nessun ordine disponibile.</li>
-                        {% endfor %}
-                    </ul>
-
-                    <!-- Vendite -->
-                    <h6 class="h6">Vendite</h6>
-                    <ul class="list-group">
-                        {% for sale in sales %}
-                            <li class="list-group-item">
-                                <strong>
-                                    {% if sale.customer %}
-                                        {{ sale.customer.name }}
-                                    {% else %}
-                                        Cliente Sconosciuto
-                                    {% endif %}
-                                </strong> - {{ sale.quantity }} pezzi a {{ sale.unit_price }}€
-                                <span class="badge bg-success">{{ sale.status }}</span>
-                                <br>
-                                Data: {{ sale.sale_date|date:"d M Y" }}
-                            </li>
-                        {% empty %}
-                            <li class="list-group-item text-muted">Nessuna vendita disponibile.</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-            </div>
         </div>
     </div>
+    <!-- Sezione per le Transazioni -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="h5">Transazioni Associate</h5>
+        </div>
+        <div class="card-body">
+            <!-- Ordini -->
+            <h6 class="h6">Ordini</h6>
+            <ul class="list-group mb-3">
+                {% for order in orders %}
+                    <li class="list-group-item">
+                        <strong>
+                            {% if order.customer %}
+                                {{ order.customer.name }}
+                            {% else %}
+                                Fornitore Sconosciuto
+                            {% endif %}
+                        </strong> - {{ order.quantity }} pezzi a {{ order.unit_price }}€
+                        <span class="badge bg-info">{{ order.status }}</span>
+                        <br>
+                        Data: {{ order.sale_date|date:"d M Y" }}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Nessun ordine disponibile.</li>
+                {% endfor %}
+            </ul>
 
-    <a href="{% url 'inventory:product_view' %}" class="btn btn-secondary mt-4">Torna alla Lista Prodotti</a>
+            <!-- Vendite -->
+            <h6 class="h6">Vendite</h6>
+            <ul class="list-group">
+                {% for sale in sales %}
+                    <li class="list-group-item">
+                        <strong>
+                            {% if sale.customer %}
+                                {{ sale.customer.name }}
+                            {% else %}
+                                Cliente Sconosciuto
+                            {% endif %}
+                        </strong> - {{ sale.quantity }} pezzi a {{ sale.unit_price }}€
+                        <span class="badge bg-success">{{ sale.status }}</span>
+                        <br>
+                        Data: {{ sale.sale_date|date:"d M Y" }}
+                    </li>
+                {% empty %}
+                    <li class="list-group-item text-muted">Nessuna vendita disponibile.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
 </div>
 
 <!-- Modale per aggiungere immagini -->

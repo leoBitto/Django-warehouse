@@ -4,17 +4,22 @@
 {% block dashboard_app %}
 
 <div class="container mt-4">
-    <div class="d-flex justify-content-between align-items-center">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="h4">Vendite</h2>
-        <button class="btn bg-dark text-white" type="button" data-bs-toggle="collapse" data-bs-target="#createSaleForm" aria-expanded="false" aria-controls="createSaleForm">
+        <button class="btn bg-dark text-white" type="button" data-bs-toggle="modal" data-bs-target="#createSaleModal">
             Aggiungi Vendita
         </button>
     </div>
 
-    <div class="mb-4">
-        <div class="collapse mt-3" id="createSaleForm">
-            <div class="card">
-                <div class="card-body">
+    <!-- Modal per la creazione di una vendita -->
+    <div class="modal fade w-80" id="createSaleModal" tabindex="-1" aria-labelledby="createSaleModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="createSaleModalLabel">Nuova Vendita</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
                     <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                         {{ create_form.as_p }}
@@ -26,12 +31,12 @@
     </div>
 
     <!-- Campo di ricerca -->
-    <div class="m-3">
+    <div class="mb-4">
         <input type="text" id="searchInput" class="form-control" placeholder="Cerca vendita...">
     </div>
 
     <!-- Tabella delle vendite -->
-    <div class="mt-4">
+    <div>
         <h3 class="h5">Lista Vendite</h3>
         <table id="saleTable" class="table table-bordered w-100">
             <thead class="table-dark">
@@ -45,51 +50,19 @@
                 </tr>
             </thead>
             <tbody>
-                {% for info in sale_forms %}
+                {% for sale in sales %}
                     <tr class="sale-item">
-                        <td>{{ info.sale.customer }}</td>
-                        <td>{{ info.sale.product.name }}</td>
-                        <td>{{ info.sale.quantity }}</td>
-                        <td>€{{ info.sale.unit_price|floatformat:2 }}</td>
-                        <td>{{ info.sale.sale_date }}</td>
+                        <td>{{ sale.customer }}</td>
+                        <td>{{ sale.product.name }}</td>
+                        <td>{{ sale.quantity }}</td>
+                        <td>€{{ sale.unit_price|floatformat:2 }}</td>
+                        <td>{{ sale.sale_date|date:"d/m/Y" }}</td> <!-- Formato data italiano -->
                         <td>
-                            <div class="btn-group" role="group">
-                                <!-- Pulsante per mostrare il form di modifica -->
-                                <button class="btn btn-sm btn-outline-dark" type="button" data-bs-toggle="modal" data-bs-target="#updateModal-{{ info.sale.id }}" aria-expanded="false" aria-controls="updateModal-{{ info.sale.id }}">
-                                    <i class="fas fa-edit"></i> Modifica
-                                </button>
-
-                                <!-- Form per eliminare una vendita -->
-                                <form method="post" class="d-inline" onsubmit="return confirm('Sei sicuro di voler eliminare questa vendita?');">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="sale_id" value="{{ info.sale.id }}">
-                                    <button type="submit" name="delete_sale" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-trash-alt"></i>
-                                    </button>
-                                </form>
-                            </div>
+                            <a href="{% url 'inventory:sale_detail' sale.id %}" class="btn btn-sm btn-outline-dark">
+                                <i class="fas fa-edit"></i> Modifica
+                            </a>
                         </td>
                     </tr>
-
-                    <!-- Modal per aggiornare la vendita -->
-                    <div class="modal fade" id="updateModal-{{ info.sale.id }}" tabindex="-1" aria-labelledby="updateModalLabel-{{ info.sale.id }}" aria-hidden="true">
-                        <div class="modal-dialog modal-lg"> <!-- Aggiungi la classe modal-lg qui per renderlo più largo -->
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="updateModalLabel-{{ info.sale.id }}">Modifica Vendita</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <form method="post" enctype="multipart/form-data">
-                                        {% csrf_token %}
-                                        {{ info.form.as_p }}
-                                        <input type="hidden" name="sale_id" value="{{ info.sale.id }}">
-                                        <button type="submit" name="update_sale" class="btn bg-dark text-white">Salva Modifiche</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 {% empty %}
                     <tr>
                         <td colspan="6">Nessuna vendita disponibile.</td>
