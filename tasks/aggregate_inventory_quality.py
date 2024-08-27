@@ -16,9 +16,9 @@ def aggregate_inventory_quality():
 
         # Aggregazione della qualità dei dati
         products_missing_category = Product.objects.using('default').filter(category__isnull=True).count()
-        products_missing_image = Product.objects.using('default').filter(image__isnull=True).count()
+        products_missing_image = Product.objects.using('default').filter(images__isnull=True).count()
         products_missing_description = Product.objects.using('default').filter(description__isnull=True).count()
-        products_missing_both = Product.objects.using('default').filter(image__isnull=True, description__isnull=True).count()
+        products_missing_both = Product.objects.using('default').filter(images__isnull=True, description__isnull=True).count()
 
         # Creazione del dizionario per l'aggregazione
         quality_aggregations = {

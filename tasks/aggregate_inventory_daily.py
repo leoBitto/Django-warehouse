@@ -24,7 +24,7 @@ def aggregate_inventory_daily():
         total_stock_value = aggregate(Product.objects.using('default'), F('stock_quantity') * F('unit_price'))
 
         total_sold_units = aggregate(Sale.objects.using('default'), 'quantity', 'sale_date', date)
-        total_sales_value = aggregate(Sale.objects.using('default'), F('quantity') * F('unit_price'), 'sale_date', date)
+        total_sales_value = aggregate(Sale.objects.using('default'), F('quantity') * F('average_sales_price'), 'sale_date', date)
 
         total_pending_sales = Sale.objects.using('default').filter(status='pending', sale_date=date).count()
         total_delivered_sales = Sale.objects.using('default').filter(status='delivered', delivery_date=date).count()
@@ -32,7 +32,7 @@ def aggregate_inventory_daily():
         total_cancelled_sales = Sale.objects.using('default').filter(status='cancelled', sale_date=date).count()
 
         total_ordered_units = aggregate(Order.objects.using('default'), 'quantity', 'sale_date', date)
-        total_orders_value = aggregate(Order.objects.using('default'), F('quantity') * F('unit_price'), 'sale_date', date)
+        total_orders_value = aggregate(Order.objects.using('default'), F('quantity') * F('average_purchase_price'), 'sale_date', date)
 
         total_pending_orders = Order.objects.using('default').filter(status='pending', sale_date=date).count()
         total_delivered_orders = Order.objects.using('default').filter(status='delivered', delivery_date=date).count()

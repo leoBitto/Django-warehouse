@@ -1,7 +1,16 @@
 # inventory/urls.py
 
 from django.urls import path
-from .views.base import ProductCategoryView, ProductView, SaleListView, SaleDetailView, OrderListView, OrderDetailView, ProductDetailView, DownloadStockDataCSV
+from .views.base import (ProductCategoryView,
+    ProductView, 
+    SaleListView, 
+    SaleDetailView, 
+    OrderListView, 
+    OrderDetailView, 
+    ProductDetailView, 
+    DownloadStockDataCSV,
+    )
+from .views.aggregated import ReportView
 
 app_name = 'inventory'
 
@@ -14,5 +23,7 @@ urlpatterns = [
     path('sale/<int:sale_id>/', SaleDetailView.as_view(), name='sale_detail'),
     path('orders/', OrderListView.as_view(), name='order_list'),
     path('order/<int:order_id>/', OrderDetailView.as_view(), name='order_detail'),
+
+    path('report/', ReportView.as_view(), name='view_report'),
 
 ]
