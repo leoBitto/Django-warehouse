@@ -10,7 +10,7 @@ from .views.base import (ProductCategoryView,
     ProductDetailView, 
     DownloadStockDataCSV,
     )
-from .views.aggregated import ReportView
+from .views.aggregated import GenerateReportView
 
 app_name = 'inventory'
 
@@ -24,6 +24,6 @@ urlpatterns = [
     path('orders/', OrderListView.as_view(), name='order_list'),
     path('order/<int:order_id>/', OrderDetailView.as_view(), name='order_detail'),
 
-    path('report/', ReportView.as_view(), name='view_report'),
+    path('', GenerateReportView.as_view(), name='generate_report'),
 
 ]
