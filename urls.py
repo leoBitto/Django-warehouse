@@ -24,6 +24,6 @@ urlpatterns = [
     path('orders/', OrderListView.as_view(), name='order_list'),
     path('order/<int:order_id>/', OrderDetailView.as_view(), name='order_detail'),
 
-    path('', GenerateReportView.as_view(), name='generate_report'),
+    path('generate-report/', GenerateReportView.as_view(), name='generate_report'),
 
 ]
