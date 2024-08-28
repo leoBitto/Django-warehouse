@@ -1,7 +1,8 @@
 import logging
 from django.utils import timezone
-from django.db.models import Sum, F
+from django.db.models import Sum
 from django.db import transaction
+from decimal import Decimal
 from ..models.aggregated import InventoryDailyAggregation
 from inventory.models.base import Product, Sale, Order
 
@@ -12,32 +13,36 @@ def aggregate_inventory_daily():
         now = timezone.now()
         date = now.date()
 
-        # Funzione helper per aggregare dati
-        def aggregate(queryset, field, filter_date_field=None, filter_date=None):
-            qs = queryset
-            if filter_date_field and filter_date:
-                qs = qs.filter(**{filter_date_field: filter_date})
-            return qs.aggregate(total=Sum(field))['total'] or 0
+        # Calcola il numero di prodotti distinti in stock
+        distinct_products_in_stock = Product.objects.filter(stock_quantity__gt=0).count()
 
-        # Calcola i dati di aggregazione
-        distinct_products_in_stock = Product.objects.using('default').filter(stock_quantity__gt=0).count()
-        total_stock_value = aggregate(Product.objects.using('default'), F('stock_quantity') * F('unit_price'))
+        # Calcola il valore totale delle scorte
+        total_stock_value = Decimal('0')
+        for product in Product.objects.filter(stock_quantity__gt=0):
+            total_stock_value += product.stock_quantity * product.average_sales_price
 
-        total_sold_units = aggregate(Sale.objects.using('default'), 'quantity', 'sale_date', date)
-        total_sales_value = aggregate(Sale.objects.using('default'), F('quantity') * F('average_sales_price'), 'sale_date', date)
+        # Calcola le vendite
+        total_sold_units = Sale.objects.filter(sale_date=date).aggregate(total=Sum('quantity'))['total'] or 0
+        total_sales_value = Decimal('0')
+        for sale in Sale.objects.filter(sale_date=date):
+            total_sales_value += sale.quantity * sale.unit_price
 
-        total_pending_sales = Sale.objects.using('default').filter(status='pending', sale_date=date).count()
-        total_delivered_sales = Sale.objects.using('default').filter(status='delivered', delivery_date=date).count()
-        total_paid_sales = Sale.objects.using('default').filter(status='paid', payment_date=date).count()
-        total_cancelled_sales = Sale.objects.using('default').filter(status='cancelled', sale_date=date).count()
+        # Calcola gli ordini
+        total_ordered_units = Order.objects.filter(sale_date=date).aggregate(total=Sum('quantity'))['total'] or 0
+        total_orders_value = Decimal('0')
+        for order in Order.objects.filter(sale_date=date):
+            total_orders_value += order.quantity * order.unit_price
 
-        total_ordered_units = aggregate(Order.objects.using('default'), 'quantity', 'sale_date', date)
-        total_orders_value = aggregate(Order.objects.using('default'), F('quantity') * F('average_purchase_price'), 'sale_date', date)
+        # Calcola i contatori degli stati delle vendite e degli ordini
+        total_pending_sales = Sale.objects.filter(status='pending', sale_date=date).count()
+        total_delivered_sales = Sale.objects.filter(status='delivered', delivery_date=date).count()
+        total_paid_sales = Sale.objects.filter(status='paid', payment_date=date).count()
+        total_cancelled_sales = Sale.objects.filter(status='cancelled', sale_date=date).count()
 
-        total_pending_orders = Order.objects.using('default').filter(status='pending', sale_date=date).count()
-        total_delivered_orders = Order.objects.using('default').filter(status='delivered', delivery_date=date).count()
-        total_paid_orders = Order.objects.using('default').filter(status='paid', payment_date=date).count()
-        total_cancelled_orders = Order.objects.using('default').filter(status='cancelled', sale_date=date).count()
+        total_pending_orders = Order.objects.filter(status='pending', sale_date=date).count()
+        total_delivered_orders = Order.objects.filter(status='delivered', delivery_date=date).count()
+        total_paid_orders = Order.objects.filter(status='paid', payment_date=date).count()
+        total_cancelled_orders = Order.objects.filter(status='cancelled', sale_date=date).count()
 
         # Creazione del dizionario per l'aggregazione
         inventory_aggregations = {
@@ -58,7 +63,7 @@ def aggregate_inventory_daily():
         }
 
         # Aggiornamento o creazione del record nel modello InventoryDailyAggregation
-        with transaction.atomic(using='gold'):
+        with transaction.atomic():
             obj, created = InventoryDailyAggregation.objects.using('gold').update_or_create(
                 date=date,
                 defaults=inventory_aggregations
