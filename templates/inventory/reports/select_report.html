@@ -1,0 +1,77 @@
+<!-- inventory/templates/inventory/reports/select_report.html -->
+<div class="container mt-4">
+    <h1>Seleziona Report per Inventory</h1>
+    <div class="row d-flex justify-content-evenly align-items-stretch">
+        
+        <!-- Card per Global Annual Report -->
+        <div class="col-md-4 mb-4">
+            <div class="card d-flex flex-column h-100">
+                <div class="card-body d-flex flex-column">
+                    <i class="fas fa-chart-line fa-3x mb-3 text-primary"></i>
+                    <h5 class="card-title">Global Annual Report</h5>
+                    <p class="card-text">Visualizza i dati aggregati annuali globali dell'inventario.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'inventory:global_annual_report' %}" class="btn btn-dark">Visualizza Report</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Card per Product Monthly Report -->
+        <div class="col-md-4 mb-4">
+            <div class="card d-flex flex-column h-100">
+                <div class="card-body d-flex flex-column">
+                    <i class="fas fa-boxes fa-3x mb-3 text-success"></i>
+                    <h5 class="card-title">Product Monthly Report</h5>
+                    <p class="card-text">Visualizza i dati aggregati mensili per prodotto.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'inventory:product_monthly_report' %}" class="btn btn-dark">Visualizza Report</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card per Data Quality Quarterly Report -->
+        <div class="col-md-4 mb-4">
+            <div class="card d-flex flex-column h-100">
+                <div class="card-body d-flex flex-column">
+                    <i class="fas fa-check-circle fa-3x mb-3 text-warning"></i>
+                    <h5 class="card-title">Data Quality Quarterly Report</h5>
+                    <p class="card-text">Monitora la qualità dei dati trimestrali relativi all'inventario.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'inventory:data_quality_quarterly_report' %}" class="btn btn-dark">Visualizza Report</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card per Sales Daily Report -->
+        <div class="col-md-4 mb-4">
+            <div class="card d-flex flex-column h-100">
+                <div class="card-body d-flex flex-column">
+                    <i class="fas fa-shopping-cart fa-3x mb-3 text-info"></i>
+                    <h5 class="card-title">Sales Daily Report</h5>
+                    <p class="card-text">Analizza le vendite giornaliere con i dati più recenti.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'inventory:sales_daily_report' %}" class="btn btn-dark">Visualizza Report</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Card per Orders Annual Report -->
+        <div class="col-md-4 mb-4">
+            <div class="card d-flex flex-column h-100">
+                <div class="card-body d-flex flex-column">
+                    <i class="fas fa-truck fa-3x mb-3 text-danger"></i>
+                    <h5 class="card-title">Orders Annual Report</h5>
+                    <p class="card-text">Consulta le statistiche annuali sugli ordini.</p>
+                    <div class="mt-auto">
+                        <a href="{% url 'inventory:orders_annual_report' %}" class="btn btn-dark">Visualizza Report</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
