@@ -2,72 +2,177 @@
 <div class="container mt-4">
     <h1>Seleziona Report per Inventory</h1>
     <div class="row d-flex justify-content-evenly align-items-stretch">
-        
-        <!-- Card per Global Annual Report -->
-        <div class="col-md-4 mb-4">
+
+        <!-- Card per Global Report -->
+        <div class="col-md-6 mb-4">
             <div class="card d-flex flex-column h-100">
                 <div class="card-body d-flex flex-column">
                     <i class="fas fa-chart-line fa-3x mb-3 text-primary"></i>
-                    <h5 class="card-title">Global Annual Report</h5>
-                    <p class="card-text">Visualizza i dati aggregati annuali globali dell'inventario.</p>
-                    <div class="mt-auto">
-                        <a href="{% url 'inventory:global_annual_report' %}" class="btn btn-dark">Visualizza Report</a>
+                    <h5 class="card-title">Global Report</h5>
+                    <p class="card-text">Visualizza i dati aggregati globali dell'inventario.</p>
+                    <button class="btn btn-outline-dark mt-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseGlobal" aria-expanded="false" aria-controls="collapseGlobal">
+                        Seleziona Opzioni
+                    </button>
+                    <div class="collapse mt-3" id="collapseGlobal">
+                        <form method="get" action="{% url 'inventory:generate_report' %}">
+                            <!-- Selezione del tipo di aggregazione -->
+                            <div class="mb-3">
+                                <label for="id_aggregation_type" class="form-label">{{ report_type_form.aggregation_type.label }}</label>
+                                {{ report_type_form.aggregation_type }}
+                            </div>
+                            <!-- Selezione della data di inizio -->
+                            <div class="mb-3">
+                                <label for="id_start_date" class="form-label">{{ report_type_form.start_date.label }}</label>
+                                {{ report_type_form.start_date }}
+                            </div>
+                            <!-- Selezione della data di fine -->
+                            <div class="mb-3">
+                                <label for="id_end_date" class="form-label">{{ report_type_form.end_date.label }}</label>
+                                {{ report_type_form.end_date }}
+                            </div>
+                            <input hidden name="report_type" value="global">
+                            <button type="submit" class="btn btn-dark">Genera Report</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Card per Product Monthly Report -->
-        <div class="col-md-4 mb-4">
+
+        <!-- Card per Product Report -->
+        <div class="col-md-6 mb-4">
             <div class="card d-flex flex-column h-100">
                 <div class="card-body d-flex flex-column">
                     <i class="fas fa-boxes fa-3x mb-3 text-success"></i>
-                    <h5 class="card-title">Product Monthly Report</h5>
-                    <p class="card-text">Visualizza i dati aggregati mensili per prodotto.</p>
-                    <div class="mt-auto">
-                        <a href="{% url 'inventory:product_monthly_report' %}" class="btn btn-dark">Visualizza Report</a>
+                    <h5 class="card-title">Product Report</h5>
+                    <p class="card-text">Visualizza i dati aggregati per prodotto.</p>
+                    <button class="btn btn-outline-dark mt-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseProduct" aria-expanded="false" aria-controls="collapseProduct">
+                        Seleziona Opzioni
+                    </button>
+                    <div class="collapse mt-3" id="collapseProduct">
+                        <form method="get" action="{% url 'inventory:generate_report' %}">
+                            <!-- Selezione del tipo di aggregazione -->
+                            <div class="mb-3">
+                                <label for="id_aggregation_type" class="form-label">{{ report_type_form.aggregation_type.label }}</label>
+                                {{ report_type_form.aggregation_type }}
+                            </div>
+                            <!-- Selezione della data di inizio -->
+                            <div class="mb-3">
+                                <label for="id_start_date" class="form-label">{{ report_type_form.start_date.label }}</label>
+                                {{ report_type_form.start_date }}
+                            </div>
+                            <!-- Selezione della data di fine -->
+                            <div class="mb-3">
+                                <label for="id_end_date" class="form-label">{{ report_type_form.end_date.label }}</label>
+                                {{ report_type_form.end_date }}
+                            </div>
+                            <input hidden name="report_type" value="product">
+                            <button type="submit" class="btn btn-dark">Genera Report</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Card per Data Quality Quarterly Report -->
-        <div class="col-md-4 mb-4">
+        <!-- Card per Data Quality Report -->
+        <div class="col-md-6 mb-4">
             <div class="card d-flex flex-column h-100">
                 <div class="card-body d-flex flex-column">
                     <i class="fas fa-check-circle fa-3x mb-3 text-warning"></i>
-                    <h5 class="card-title">Data Quality Quarterly Report</h5>
-                    <p class="card-text">Monitora la qualità dei dati trimestrali relativi all'inventario.</p>
-                    <div class="mt-auto">
-                        <a href="{% url 'inventory:data_quality_quarterly_report' %}" class="btn btn-dark">Visualizza Report</a>
+                    <h5 class="card-title">Data Quality Report</h5>
+                    <p class="card-text">Monitora la qualità dei dati relativi all'inventario.</p>
+                    <button class="btn btn-outline-dark mt-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDataQuality" aria-expanded="false" aria-controls="collapseDataQuality">
+                        Seleziona Opzioni
+                    </button>
+                    <div class="collapse mt-3" id="collapseDataQuality">
+                        <form method="get" action="{% url 'inventory:generate_report' %}">
+                            <!-- Selezione del tipo di aggregazione -->
+                            <div class="mb-3">
+                                <label for="id_aggregation_type" class="form-label">{{ report_type_form.aggregation_type.label }}</label>
+                                {{ report_type_form.aggregation_type }}
+                            </div>
+                            <!-- Selezione della data di inizio -->
+                            <div class="mb-3">
+                                <label for="id_start_date" class="form-label">{{ report_type_form.start_date.label }}</label>
+                                {{ report_type_form.start_date }}
+                            </div>
+                            <!-- Selezione della data di fine -->
+                            <div class="mb-3">
+                                <label for="id_end_date" class="form-label">{{ report_type_form.end_date.label }}</label>
+                                {{ report_type_form.end_date }}
+                            </div>
+                            <input hidden name="report_type" value="data-quality">
+                            <button type="submit" class="btn btn-dark">Genera Report</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Card per Sales Daily Report -->
-        <div class="col-md-4 mb-4">
+        <!-- Card per Sales Report -->
+        <div class="col-md-6 mb-4">
             <div class="card d-flex flex-column h-100">
                 <div class="card-body d-flex flex-column">
                     <i class="fas fa-shopping-cart fa-3x mb-3 text-info"></i>
-                    <h5 class="card-title">Sales Daily Report</h5>
-                    <p class="card-text">Analizza le vendite giornaliere con i dati più recenti.</p>
-                    <div class="mt-auto">
-                        <a href="{% url 'inventory:sales_daily_report' %}" class="btn btn-dark">Visualizza Report</a>
+                    <h5 class="card-title">Sales Report</h5>
+                    <p class="card-text">Analizza le vendite con i dati più recenti.</p>
+                    <button class="btn btn-outline-dark mt-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSales" aria-expanded="false" aria-controls="collapseSales">
+                        Seleziona Opzioni
+                    </button>
+                    <div class="collapse mt-3" id="collapseSales">
+                        <form method="get" action="{% url 'inventory:generate_report' %}">
+                            <!-- Selezione del tipo di aggregazione -->
+                            <div class="mb-3">
+                                <label for="id_aggregation_type" class="form-label">{{ report_type_form.aggregation_type.label }}</label>
+                                {{ report_type_form.aggregation_type }}
+                            </div>
+                            <!-- Selezione della data di inizio -->
+                            <div class="mb-3">
+                                <label for="id_start_date" class="form-label">{{ report_type_form.start_date.label }}</label>
+                                {{ report_type_form.start_date }}
+                            </div>
+                            <!-- Selezione della data di fine -->
+                            <div class="mb-3">
+                                <label for="id_end_date" class="form-label">{{ report_type_form.end_date.label }}</label>
+                                {{ report_type_form.end_date }}
+                            </div>
+                            <input hidden name="report_type" value="sales">
+                            <button type="submit" class="btn btn-dark">Genera Report</button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Card per Orders Annual Report -->
-        <div class="col-md-4 mb-4">
+        <!-- Card per Orders Report -->
+        <div class="col-md-6 mb-4">
             <div class="card d-flex flex-column h-100">
                 <div class="card-body d-flex flex-column">
                     <i class="fas fa-truck fa-3x mb-3 text-danger"></i>
-                    <h5 class="card-title">Orders Annual Report</h5>
-                    <p class="card-text">Consulta le statistiche annuali sugli ordini.</p>
-                    <div class="mt-auto">
-                        <a href="{% url 'inventory:orders_annual_report' %}" class="btn btn-dark">Visualizza Report</a>
+                    <h5 class="card-title">Orders Report</h5>
+                    <p class="card-text">Consulta le statistiche sugli ordini.</p>
+                    <button class="btn btn-outline-dark mt-auto" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOrders" aria-expanded="false" aria-controls="collapseOrders">
+                        Seleziona Opzioni
+                    </button>
+                    <div class="collapse mt-3" id="collapseOrders">
+                        <form method="get" action="{% url 'inventory:generate_report' %}">
+                            <!-- Selezione del tipo di aggregazione -->
+                            <div class="mb-3">
+                                <label for="id_aggregation_type" class="form-label">{{ report_type_form.aggregation_type.label }}</label>
+                                {{ report_type_form.aggregation_type }}
+                            </div>
+                            <!-- Selezione della data di inizio -->
+                            <div class="mb-3">
+                                <label for="id_start_date" class="form-label">{{ report_type_form.start_date.label }}</label>
+                                {{ report_type_form.start_date }}
+                            </div>
+                            <!-- Selezione della data di fine -->
+                            <div class="mb-3">
+                                <label for="id_end_date" class="form-label">{{ report_type_form.end_date.label }}</label>
+                                {{ report_type_form.end_date }}
+                            </div>
+                            <input hidden name="report_type" value="orders">
+                            <button type="submit" class="btn btn-dark">Genera Report</button>
+                        </form>
                     </div>
                 </div>
             </div>

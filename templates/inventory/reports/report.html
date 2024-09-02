@@ -1,0 +1,35 @@
+{% extends "backoffice/backoffice_base.html" %}
+{% load static %}
+
+{% block dashboard_app %}
+
+    <div class="container mt-4">
+        <h1>Report: {{ report_type|title }} - {{ aggregation_type|title }}</h1>
+        <p>Periodo: {{ start_date }} - {{ end_date }}</p>
+
+        {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+        {% else %}
+            <!-- In base al tipo di report, mostra i dati -->
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <!-- Assumiamo che i modelli abbiano i campi 'name' e 'value' -->
+                        <th>Nome</th>
+                        <th>Valore</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in data %}
+                        <tr>
+                            <td>{{ item.name }}</td>
+                            <td>{{ item.value }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% endif %}
+    </div>
+    {% endblock dashboard_app %}

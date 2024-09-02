@@ -147,7 +147,6 @@ def aggregate_sales_weekly():
     except Exception as e:
         logger.error(f'Errore durante l\'aggregazione settimanale delle vendite per la settimana {start_of_week} - {end_of_week}: {e}')
 
-
 def aggregate_sales_monthly():
     try:
         today = timezone.now().date()
@@ -210,7 +209,6 @@ def aggregate_sales_monthly():
 
     except Exception as e:
         logger.error(f'Errore durante l\'aggregazione mensile delle vendite per il mese {start_of_month}: {e}')
-
 
 def aggregate_sales_quarterly():
     try:
@@ -275,7 +273,6 @@ def aggregate_sales_quarterly():
 
     except Exception as e:
         logger.error(f'Errore durante l\'aggregazione trimestrale delle vendite per il trimestre {quarter}: {e}')
-
 
 def aggregate_sales_annually():
     try:

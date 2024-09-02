@@ -72,7 +72,6 @@ def aggregate_orders_daily():
     except Exception as e:
         logger.error(f'Errore durante l\'aggregazione giornaliera degli ordini per il giorno {today}: {e}')
 
-
 def aggregate_orders_weekly():
     try:
         today = timezone.now().date()
@@ -199,7 +198,6 @@ def aggregate_orders_monthly():
     except Exception as e:
         logger.error(f'Errore durante l\'aggregazione mensile degli ordini per il mese {start_of_month}: {e}')
 
-
 def aggregate_orders_quarterly():
     try:
         today = timezone.now().date()
@@ -263,7 +261,6 @@ def aggregate_orders_quarterly():
 
     except Exception as e:
         logger.error(f'Errore durante l\'aggregazione trimestrale degli ordini per il trimestre {quarter}: {e}')
-
 
 def aggregate_orders_annually():
     try:

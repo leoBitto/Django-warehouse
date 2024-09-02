@@ -50,8 +50,8 @@ def aggregate_quality_year():
 
         quality_aggregations = calculate_quality_aggregates(start_date=start_of_year, end_date=end_of_year)
 
-        with transaction.atomic(using='gold'):
-            DataQualityAnnualAggregation.objects.update_or_create(
+        with transaction.atomic():
+            DataQualityAnnualAggregation.objects.using('gold').update_or_create(
                 year=today.year,
                 defaults=quality_aggregations
             )
@@ -60,7 +60,7 @@ def aggregate_quality_year():
     except Exception as e:
         logger.error(f'Error in inventory quality aggregation for {today.year}: {e}', exc_info=True)
 
-def aggregate_quality_quarterly():
+def aggregate_quality_quarter():
     try:
         today = timezone.now().date()
         quarter = (today.month - 1) // 3 + 1
@@ -69,8 +69,8 @@ def aggregate_quality_quarterly():
 
         quality_aggregations = calculate_quality_aggregates(start_date=start_of_quarter, end_date=end_of_quarter)
 
-        with transaction.atomic(using='gold'):
-            DataQualityQuarterlyAggregation.objects.update_or_create(
+        with transaction.atomic():
+            DataQualityQuarterlyAggregation.objects.using('gold').update_or_create(
                 year=today.year,
                 quarter=quarter,
                 defaults=quality_aggregations
