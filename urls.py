@@ -24,5 +24,11 @@ urlpatterns = [
     path('orders/', OrderListView.as_view(), name='order_list'),
     path('order/<int:order_id>/', OrderDetailView.as_view(), name='order_detail'),
 
+    path('global_report/', GlobalReportView.as_view(), name='global_report'),
+    path('product_report/', ProductReportView.as_view(), name='product_report'),
+    path('data_quality_report/', DataQualityReportView.as_view(), name='data_quality_report'),
+    path('sales_report/', SalesReportView.as_view(), name='sales_report'),
+    path('orders_report/', OrdersReportView.as_view(), name='orders_report'),
+
     path('reports/', generate_report, name='generate_report'),
 ]

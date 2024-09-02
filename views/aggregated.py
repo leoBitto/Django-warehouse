@@ -1,6 +1,7 @@
 # inventory/views/aggregated.py
 from django.shortcuts import render
 from datetime import datetime
+from django.views import View
 from inventory.models.aggregated import (
     InventoryGlobalAnnualAggregation, InventoryGlobalQuarterlyAggregation,
     ProductAnnualAggregation, ProductQuarterlyAggregation, ProductMonthlyAggregation,
@@ -10,9 +11,75 @@ from inventory.models.aggregated import (
     OrdersDailyAggregation, OrdersWeeklyAggregation, OrdersMonthlyAggregation,
     OrdersQuarterlyAggregation, OrdersAnnualAggregation
 )
+from backoffice.forms import *
 import logging
 logger = logging.getLogger('app')
 from django.db.models import Q
+
+
+class GlobalReportView(View):
+    pass
+
+
+class ProductReportView(View):
+    pass
+
+
+class SalesReportView(View):
+    pass
+
+
+class OrdersReportView(View):
+    pass
+
+
+class DataQualityReportView(View):
+    template_name = 'inventory/reports/select_aggregation.html'
+
+    def get(self, request, *args, **kwargs):
+        context = {
+            'quarterly_form': QuarterlyAggregationForm(),
+            'yearly_form': YearlyAggregationForm(),
+            'report_type': 'Data Quality',
+        }
+        return render(request, self.template_name, context)
+
+    def post(self, request, *args, **kwargs):
+        if 'quarterly_submit' in request.POST:
+            form = QuarterlyAggregationForm(request.POST)
+            aggregation_model = DataQualityQuarterlyAggregation
+        elif 'yearly_submit' in request.POST:
+            form = YearlyAggregationForm(request.POST)
+            aggregation_model = DataQualityAnnualAggregation
+        else:
+            form = None
+            aggregation_model = None
+
+        if form and form.is_valid():
+            if isinstance(form, QuarterlyAggregationForm):
+                data = aggregation_model.objects.filter(
+                    year=form.cleaned_data['year'],
+                    quarter=form.cleaned_data['quarter']
+                )
+            elif isinstance(form, YearlyAggregationForm):
+                data = aggregation_model.objects.filter(year=form.cleaned_data['year'])
+
+            return render(request, 'inventory/reports/report.html', {
+                'data': data,
+                'report_type': 'Data Quality',
+                'aggregation_type': form.cleaned_data.get('aggregation_type', 'Unknown')
+            })
+
+        context = {
+            'quarterly_form': QuarterlyAggregationForm(),
+            'yearly_form': YearlyAggregationForm(),
+            'report_type': 'Data Quality',
+        }
+        return render(request, self.template_name, context)
+
+
+
+
 
 def filter_data_by_aggregation_type(model, aggregation_type, start_date, end_date):
     if aggregation_type == 'daily':

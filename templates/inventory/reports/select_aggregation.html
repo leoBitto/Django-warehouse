@@ -1,0 +1,46 @@
+{% extends "backoffice/backoffice_base.html" %}
+{% load static %}
+
+{% block dashboard_app %}
+<div class="container mt-4">
+    <h1>Seleziona Aggregazione per {{ report_type }} Report</h1>
+
+    <div class="accordion" id="aggregationForms">
+        <!-- Collassabile per l'aggregazione trimestrale -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingQuarterly">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseQuarterly" aria-expanded="true" aria-controls="collapseQuarterly">
+                    Aggregazione Trimestrale
+                </button>
+            </h2>
+            <div id="collapseQuarterly" class="accordion-collapse collapse show" aria-labelledby="headingQuarterly" data-bs-parent="#aggregationForms">
+                <div class="accordion-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ quarterly_form.as_p }}
+                        <button type="submit" name="quarterly_submit" class="btn btn-dark">Genera Report Trimestrale</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Collassabile per l'aggregazione annuale -->
+        <div class="accordion-item">
+            <h2 class="accordion-header" id="headingYearly">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseYearly" aria-expanded="false" aria-controls="collapseYearly">
+                    Aggregazione Annuale
+                </button>
+            </h2>
+            <div id="collapseYearly" class="accordion-collapse collapse" aria-labelledby="headingYearly" data-bs-parent="#aggregationForms">
+                <div class="accordion-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ yearly_form.as_p }}
+                        <button type="submit" name="yearly_submit" class="btn btn-dark">Genera Report Annuale</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
