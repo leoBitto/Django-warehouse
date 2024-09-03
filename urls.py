@@ -30,5 +30,5 @@ urlpatterns = [
     path('sales_report/', SalesReportView.as_view(), name='sales_report'),
     path('orders_report/', OrdersReportView.as_view(), name='orders_report'),
 
-    path('reports/', generate_report, name='generate_report'),
+   # path('reports/', generate_report, name='generate_report'),
 ]

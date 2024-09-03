@@ -2,7 +2,7 @@ from django.db.models import Sum, F, Count, Value
 from django.db.models.functions import Coalesce
 from inventory.models.base import Product, ProductCategory
 from inventory.models.aggregated import InventoryGlobalAnnualAggregation, InventoryGlobalQuarterlyAggregation
-import timezone
+from django.utils import timezone
 from django.db import transaction
 import logging
 
@@ -58,7 +58,7 @@ def aggregate_inventory_quarter():
         logger.info(f'Aggregazione trimestrale dell\'inventario completata per {quarter}/{today.year}.')
 
     except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione trimestrale dell\'inventario: {e}')
+        logger.error(f'Errore durante l\'aggregazione trimestrale dell\'inventario: {e}', exc_info=True)
 
 def aggregate_inventory_annual():
     try:
@@ -75,4 +75,4 @@ def aggregate_inventory_annual():
         logger.info(f'Aggregazione annuale dell\'inventario completata per {today.year}.')
 
     except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione annuale dell\'inventario: {e}')
+        logger.error(f'Errore durante l\'aggregazione annuale dell\'inventario: {e}', exc_info=True)

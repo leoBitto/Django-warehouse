@@ -1,7 +1,8 @@
 # inventory/views/aggregated.py
 from django.shortcuts import render
-from datetime import datetime
+from datetime import datetime, timedelta
 from django.views import View
+from django.contrib.auth.mixins import LoginRequiredMixin
 from inventory.models.aggregated import (
     InventoryGlobalAnnualAggregation, InventoryGlobalQuarterlyAggregation,
     ProductAnnualAggregation, ProductQuarterlyAggregation, ProductMonthlyAggregation,
@@ -14,10 +15,11 @@ from inventory.models.aggregated import (
 from backoffice.forms import *
 import logging
 logger = logging.getLogger('app')
-from django.db.models import Q
+
+from backoffice.utils import *
 
 
-class GlobalReportView(View):
+class GlobalReportView(LoginRequiredMixin, View):
     template_name = 'backoffice/reports/select_aggregation.html'
 
     def get(self, request, *args, **kwargs):
@@ -31,33 +33,47 @@ class GlobalReportView(View):
     def post(self, request, *args, **kwargs):
         form = None
         aggregation_model = None
+        period_type = None
+        selected_period = None
 
         if 'quarterly_submit' in request.POST:
             form = QuarterlyAggregationForm(request.POST)
-            aggregation_model = InventoryGlobalQuarterlyAggregation
+            if form.is_valid():
+                aggregation_model = InventoryGlobalQuarterlyAggregation
+                period_type = 'quarter'
+                selected_period = {
+                    'quarter': form.cleaned_data['quarter'],
+                    'year': form.cleaned_data['year']
+                }
         elif 'yearly_submit' in request.POST:
             form = YearlyAggregationForm(request.POST)
-            aggregation_model = InventoryGlobalAnnualAggregation
+            if form.is_valid():
+                aggregation_model = InventoryGlobalAnnualAggregation
+                period_type = 'year'
+                selected_period = {'year': form.cleaned_data['year']}
 
         if form and form.is_valid():
-            data = aggregation_model.objects.filter(
-                **form.cleaned_data
+            # Ottieni i dati per i 6 periodi precedenti
+            previous_periods_data = get_previous_periods(
+                aggregation_model, selected_period, period_type, num_previous_periods=6
             )
+
             return render(request, 'inventory/reports/report.html', {
-                'data': data,
+                'data': previous_periods_data,
                 'report_type': 'Global',
-                'aggregation_type': form.cleaned_data.get('aggregation_type', 'Unknown')
+                'aggregation_type': period_type,
             })
 
+        # Se il form non è valido o non è stato inviato, ricarica il form con gli errori
         context = {
-            'quarterly_form': QuarterlyAggregationForm(),
-            'yearly_form': YearlyAggregationForm(),
+            'quarterly_form': form if 'quarterly_submit' in request.POST else QuarterlyAggregationForm(),
+            'yearly_form': form if 'yearly_submit' in request.POST else YearlyAggregationForm(),
             'report_type': 'Global',
         }
         return render(request, self.template_name, context)
 
 
-class ProductReportView(View):
+class ProductReportView(LoginRequiredMixin, View):
     template_name = 'backoffice/reports/select_aggregation.html'
 
     def get(self, request, *args, **kwargs):
@@ -72,38 +88,55 @@ class ProductReportView(View):
     def post(self, request, *args, **kwargs):
         form = None
         aggregation_model = None
+        period_type = None
+        selected_period = None
 
         if 'monthly_submit' in request.POST:
             form = MonthlyAggregationForm(request.POST)
-            aggregation_model = ProductMonthlyAggregation
+            if form.is_valid():
+                aggregation_model = ProductMonthlyAggregation
+                period_type = 'month'
+                selected_period = {
+                    'month': form.cleaned_data['month'],
+                    'year': form.cleaned_data['year']
+                }
         elif 'quarterly_submit' in request.POST:
             form = QuarterlyAggregationForm(request.POST)
-            aggregation_model = ProductQuarterlyAggregation
+            if form.is_valid():
+                aggregation_model = ProductQuarterlyAggregation
+                period_type = 'quarter'
+                selected_period = {
+                    'quarter': form.cleaned_data['quarter'],
+                    'year': form.cleaned_data['year']
+                }
         elif 'yearly_submit' in request.POST:
             form = YearlyAggregationForm(request.POST)
-            aggregation_model = ProductAnnualAggregation
+            if form.is_valid():
+                aggregation_model = ProductAnnualAggregation
+                period_type = 'year'
+                selected_period = {'year': form.cleaned_data['year']}
 
         if form and form.is_valid():
-            data = aggregation_model.objects.filter(
-                **form.cleaned_data
+            previous_periods_data = get_previous_periods(
+                aggregation_model, selected_period, period_type, num_previous_periods=6
             )
             return render(request, 'inventory/reports/report.html', {
-                'data': data,
+                'data': previous_periods_data,
                 'report_type': 'Product',
-                'aggregation_type': form.cleaned_data.get('aggregation_type', 'Unknown')
+                'aggregation_type': period_type,
             })
 
         context = {
-            'monthly_form': MonthlyAggregationForm(),
-            'quarterly_form': QuarterlyAggregationForm(),
-            'yearly_form': YearlyAggregationForm(),
+            'monthly_form': form if 'monthly_submit' in request.POST else MonthlyAggregationForm(),
+            'quarterly_form': form if 'quarterly_submit' in request.POST else QuarterlyAggregationForm(),
+            'yearly_form': form if 'yearly_submit' in request.POST else YearlyAggregationForm(),
             'report_type': 'Product',
         }
         return render(request, self.template_name, context)
 
 
 
-class SalesReportView(View):
+class SalesReportView(LoginRequiredMixin, View):
     template_name = 'backoffice/reports/select_aggregation.html'
 
     def get(self, request, *args, **kwargs):
@@ -120,46 +153,71 @@ class SalesReportView(View):
     def post(self, request, *args, **kwargs):
         form = None
         aggregation_model = None
+        period_type = None
+        selected_period = None
 
         if 'daily_submit' in request.POST:
             form = DailyAggregationForm(request.POST)
-            aggregation_model = SalesDailyAggregation
+            if form.is_valid():
+                aggregation_model = SalesDailyAggregation
+                period_type = 'day'
+                selected_period = form.cleaned_data['date']
         elif 'weekly_submit' in request.POST:
             form = WeeklyAggregationForm(request.POST)
-            aggregation_model = SalesWeeklyAggregation
+            if form.is_valid():
+                aggregation_model = SalesWeeklyAggregation
+                period_type = 'week'
+                selected_period = {
+                    'week': form.cleaned_data['week'],
+                    'year': form.cleaned_data['year']
+                }
         elif 'monthly_submit' in request.POST:
             form = MonthlyAggregationForm(request.POST)
-            aggregation_model = SalesMonthlyAggregation
+            if form.is_valid():
+                aggregation_model = SalesMonthlyAggregation
+                period_type = 'month'
+                selected_period = {
+                    'month': form.cleaned_data['month'],
+                    'year': form.cleaned_data['year']
+                }
         elif 'quarterly_submit' in request.POST:
             form = QuarterlyAggregationForm(request.POST)
-            aggregation_model = SalesQuarterlyAggregation
+            if form.is_valid():
+                aggregation_model = SalesQuarterlyAggregation
+                period_type = 'quarter'
+                selected_period = {
+                    'quarter': form.cleaned_data['quarter'],
+                    'year': form.cleaned_data['year']
+                }
         elif 'yearly_submit' in request.POST:
             form = YearlyAggregationForm(request.POST)
-            aggregation_model = SalesAnnualAggregation
+            if form.is_valid():
+                aggregation_model = SalesAnnualAggregation
+                period_type = 'year'
+                selected_period = {'year': form.cleaned_data['year']}
 
         if form and form.is_valid():
-            data = aggregation_model.objects.filter(
-                **form.cleaned_data
+            previous_periods_data = get_previous_periods(
+                aggregation_model, selected_period, period_type, num_previous_periods=6
             )
             return render(request, 'inventory/reports/report.html', {
-                'data': data,
+                'data': previous_periods_data,
                 'report_type': 'Sales',
-                'aggregation_type': form.cleaned_data.get('aggregation_type', 'Unknown')
+                'aggregation_type': period_type,
             })
 
         context = {
-            'daily_form': DailyAggregationForm(),
-            'weekly_form': WeeklyAggregationForm(),
-            'monthly_form': MonthlyAggregationForm(),
-            'quarterly_form': QuarterlyAggregationForm(),
-            'yearly_form': YearlyAggregationForm(),
+            'daily_form': form if 'daily_submit' in request.POST else DailyAggregationForm(),
+            'weekly_form': form if 'weekly_submit' in request.POST else WeeklyAggregationForm(),
+            'monthly_form': form if 'monthly_submit' in request.POST else MonthlyAggregationForm(),
+            'quarterly_form': form if 'quarterly_submit' in request.POST else QuarterlyAggregationForm(),
+            'yearly_form': form if 'yearly_submit' in request.POST else YearlyAggregationForm(),
             'report_type': 'Sales',
         }
         return render(request, self.template_name, context)
 
 
-
-class OrdersReportView(View):
+class OrdersReportView(LoginRequiredMixin, View):
     template_name = 'backoffice/reports/select_aggregation.html'
 
     def get(self, request, *args, **kwargs):
@@ -176,45 +234,71 @@ class OrdersReportView(View):
     def post(self, request, *args, **kwargs):
         form = None
         aggregation_model = None
+        period_type = None
+        selected_period = None
 
         if 'daily_submit' in request.POST:
             form = DailyAggregationForm(request.POST)
-            aggregation_model = OrdersDailyAggregation
+            if form.is_valid():
+                aggregation_model = OrdersDailyAggregation
+                period_type = 'day'
+                selected_period = form.cleaned_data['date']
         elif 'weekly_submit' in request.POST:
             form = WeeklyAggregationForm(request.POST)
-            aggregation_model = OrdersWeeklyAggregation
+            if form.is_valid():
+                aggregation_model = OrdersWeeklyAggregation
+                period_type = 'week'
+                selected_period = {
+                    'week': form.cleaned_data['week'],
+                    'year': form.cleaned_data['year']
+                }
         elif 'monthly_submit' in request.POST:
             form = MonthlyAggregationForm(request.POST)
-            aggregation_model = OrdersMonthlyAggregation
+            if form.is_valid():
+                aggregation_model = OrdersMonthlyAggregation
+                period_type = 'month'
+                selected_period = {
+                    'month': form.cleaned_data['month'],
+                    'year': form.cleaned_data['year']
+                }
         elif 'quarterly_submit' in request.POST:
             form = QuarterlyAggregationForm(request.POST)
-            aggregation_model = OrdersQuarterlyAggregation
+            if form.is_valid():
+                aggregation_model = OrdersQuarterlyAggregation
+                period_type = 'quarter'
+                selected_period = {
+                    'quarter': form.cleaned_data['quarter'],
+                    'year': form.cleaned_data['year']
+                }
         elif 'yearly_submit' in request.POST:
             form = YearlyAggregationForm(request.POST)
-            aggregation_model = OrdersAnnualAggregation
+            if form.is_valid():
+                aggregation_model = OrdersAnnualAggregation
+                period_type = 'year'
+                selected_period = {'year': form.cleaned_data['year']}
 
         if form and form.is_valid():
-            data = aggregation_model.objects.filter(
-                **form.cleaned_data
+            previous_periods_data = get_previous_periods(
+                aggregation_model, selected_period, period_type, num_previous_periods=6
             )
             return render(request, 'inventory/reports/report.html', {
-                'data': data,
+                'data': previous_periods_data,
                 'report_type': 'Orders',
-                'aggregation_type': form.cleaned_data.get('aggregation_type', 'Unknown')
+                'aggregation_type': period_type,
             })
 
         context = {
-            'daily_form': DailyAggregationForm(),
-            'weekly_form': WeeklyAggregationForm(),
-            'monthly_form': MonthlyAggregationForm(),
-            'quarterly_form': QuarterlyAggregationForm(),
-            'yearly_form': YearlyAggregationForm(),
+            'daily_form': form if 'daily_submit' in request.POST else DailyAggregationForm(),
+            'weekly_form': form if 'weekly_submit' in request.POST else WeeklyAggregationForm(),
+            'monthly_form': form if 'monthly_submit' in request.POST else MonthlyAggregationForm(),
+            'quarterly_form': form if 'quarterly_submit' in request.POST else QuarterlyAggregationForm(),
+            'yearly_form': form if 'yearly_submit' in request.POST else YearlyAggregationForm(),
             'report_type': 'Orders',
         }
         return render(request, self.template_name, context)
 
 
-class DataQualityReportView(View):
+class DataQualityReportView(LoginRequiredMixin, View):
     template_name = 'backoffice/reports/select_aggregation.html'
 
     def get(self, request, *args, **kwargs):
@@ -226,157 +310,44 @@ class DataQualityReportView(View):
         return render(request, self.template_name, context)
 
     def post(self, request, *args, **kwargs):
+        form = None
+        aggregation_model = None
+        period_type = None
+        selected_period = None
+
         if 'quarterly_submit' in request.POST:
             form = QuarterlyAggregationForm(request.POST)
-            aggregation_model = DataQualityQuarterlyAggregation
+            if form.is_valid():
+                aggregation_model = DataQualityQuarterlyAggregation
+                period_type = 'quarter'
+                selected_period = {
+                    'quarter': form.cleaned_data['quarter'],
+                    'year': form.cleaned_data['year']
+                }
         elif 'yearly_submit' in request.POST:
             form = YearlyAggregationForm(request.POST)
-            aggregation_model = DataQualityAnnualAggregation
-        else:
-            form = None
-            aggregation_model = None
+            if form.is_valid():
+                aggregation_model = DataQualityAnnualAggregation
+                period_type = 'year'
+                selected_period = {'year': form.cleaned_data['year']}
 
         if form and form.is_valid():
-            if isinstance(form, QuarterlyAggregationForm):
-                data = aggregation_model.objects.filter(
-                    year=form.cleaned_data['year'],
-                    quarter=form.cleaned_data['quarter']
-                )
-            elif isinstance(form, YearlyAggregationForm):
-                data = aggregation_model.objects.filter(year=form.cleaned_data['year'])
+            # Ottieni i dati per i 6 periodi precedenti
+            previous_periods_data = get_previous_periods(
+                aggregation_model, selected_period, period_type, num_previous_periods=6
+            )
 
             return render(request, 'inventory/reports/report.html', {
-                'data': data,
+                'data': previous_periods_data,
                 'report_type': 'Data Quality',
-                'aggregation_type': form.cleaned_data.get('aggregation_type', 'Unknown')
+                'aggregation_type': period_type,
             })
 
         context = {
-            'quarterly_form': QuarterlyAggregationForm(),
-            'yearly_form': YearlyAggregationForm(),
+            'quarterly_form': form if 'quarterly_submit' in request.POST else QuarterlyAggregationForm(),
+            'yearly_form': form if 'yearly_submit' in request.POST else YearlyAggregationForm(),
             'report_type': 'Data Quality',
         }
         return render(request, self.template_name, context)
 
 
-
-
-
-def filter_data_by_aggregation_type(model, aggregation_type, start_date, end_date):
-    if aggregation_type == 'daily':
-        return model.objects.using('gold').filter(date__range=(start_date, end_date))
-    
-    elif aggregation_type == 'weekly':
-        start_week = start_date.isocalendar()[1]
-        end_week = end_date.isocalendar()[1]
-        return model.objects.using('gold').filter(
-            Q(year=start_date.year, week__gte=start_week) | 
-            Q(year=end_date.year, week__lte=end_week)
-        )
-    
-    elif aggregation_type == 'monthly':
-        start_month = start_date.month
-        end_month = end_date.month
-        return model.objects.using('gold').filter(
-            Q(year=start_date.year, month__gte=start_month) | 
-            Q(year=end_date.year, month__lte=end_month)
-        )
-    
-    elif aggregation_type == 'quarterly':
-        start_quarter = (start_date.month - 1) // 3 + 1
-        end_quarter = (end_date.month - 1) // 3 + 1
-        return model.objects.using('gold').filter(
-            Q(year=start_date.year, quarter__gte=start_quarter) | 
-            Q(year=end_date.year, quarter__lte=end_quarter)
-        )
-    
-    elif aggregation_type == 'yearly':
-        return model.objects.using('gold').filter(year__range=(start_date.year, end_date.year))
-    
-    else:
-        raise ValueError(f"Unknown aggregation type: {aggregation_type}")
-
-
-
-
-def generate_report(request):
-    # Ottieni i parametri dalla query string
-    report_type = request.GET.get('report_type')
-    aggregation_type = request.GET.get('aggregation_type')
-    start_date_str = request.GET.get('start_date')
-    end_date_str = request.GET.get('end_date')
-
-    # Verifica se tutti i parametri necessari sono presenti
-    if not all([report_type, aggregation_type, start_date_str, end_date_str]):
-        return render(request, 'inventory/reports/report.html', {
-            'error': 'Parametri mancanti. Assicurati di fornire tutti i parametri richiesti.'
-        })
-
-    # Conversione delle date da stringa a oggetto datetime
-    try:
-        start_date = datetime.strptime(start_date_str, '%Y-%m-%d')
-        end_date = datetime.strptime(end_date_str, '%Y-%m-%d')
-    except ValueError:
-        return render(request, 'inventory/reports/report.html', {
-            'error': 'Formato della data non valido.'
-        })
-    
-    logger.info(f"report_type: {report_type}")
-    logger.info(f"aggregation_type: {aggregation_type}")
-    logger.info(f"start_date: {start_date}")
-    logger.info(f"end_date: {end_date}")
-
-
-    # Mappatura dei report_type e aggregation_type ai modelli corrispondenti
-    model_map = {
-        'global': {
-            'yearly': InventoryGlobalAnnualAggregation,
-            'quarterly': InventoryGlobalQuarterlyAggregation,
-        },
-        'product': {
-            'yearly': ProductAnnualAggregation,
-            'quarterly': ProductQuarterlyAggregation,
-            'monthly': ProductMonthlyAggregation,
-        },
-        'data-quality': {
-            'quarterly': DataQualityQuarterlyAggregation,
-            'yearly': DataQualityAnnualAggregation,
-        },
-        'sales': {
-            'daily': SalesDailyAggregation,
-            'weekly': SalesWeeklyAggregation,
-            'monthly': SalesMonthlyAggregation,
-            'quarterly': SalesQuarterlyAggregation,
-            'yearly': SalesAnnualAggregation,
-        },
-        'orders': {
-            'daily': OrdersDailyAggregation,
-            'weekly': OrdersWeeklyAggregation,
-            'monthly': OrdersMonthlyAggregation,
-            'quarterly': OrdersQuarterlyAggregation,
-            'yearly': OrdersAnnualAggregation,
-        }
-    }
-
-    # Selezione del modello corrispondente
-    model = model_map.get(report_type, {}).get(aggregation_type)
-    if not model:
-        return render(request, 'inventory/reports/report.html', {
-            'error': 'Tipo di report o aggregazione non valido.'
-        })
-    
-    logger.info(f"model: {model}")
-
-    # Query sui dati filtrati per date
-    data = filter_data_by_aggregation_type(model, aggregation_type, start_date, end_date)    
-
-    logger.info(f"data: {data}")
-
-    # Passa i dati al template generico
-    return render(request, 'inventory/reports/report.html', {
-        'data': data,
-        'report_type': report_type,
-        'aggregation_type': aggregation_type,
-        'start_date': start_date,
-        'end_date': end_date,
-    })

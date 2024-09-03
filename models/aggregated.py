@@ -19,10 +19,12 @@ class InventoryGlobalAggregationMixin(models.Model):
         abstract = True
 
 class InventoryGlobalAnnualAggregation(InventoryGlobalAggregationMixin, YearlyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Year: {self.year}"
 
 class InventoryGlobalQuarterlyAggregation(InventoryGlobalAggregationMixin, QuarterlyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Year: {self.year}, Quarter: {self.quarter}"
 
 
 class ProductAggregationMixin(models.Model):
@@ -38,14 +40,22 @@ class ProductAggregationMixin(models.Model):
 class ProductAnnualAggregation(ProductAggregationMixin, YearlyAggregationBase):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='annual_aggregations')
 
+    def __str__(self):
+        return f"Year: {self.year}, Product: {self.product.name}"
+
 class ProductQuarterlyAggregation(ProductAggregationMixin, QuarterlyAggregationBase):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='quarterly_aggregations')
+
+    def __str__(self):
+        return f"Year: {self.year}, Quarter: {self.quarter}, Product: {self.product.name}"
 
 class ProductMonthlyAggregation(ProductAggregationMixin, MonthlyAggregationBase):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='monthly_aggregations')
 
+    def __str__(self):
+        return f"Year: {self.year}, Month: {self.month}, Product: {self.product.name}"
 
-# Aggregazioni della Qualità dei Dati
+
 class DataQualityAggregationMixin(models.Model):
     products_missing_image_count = models.IntegerField(null=True, blank=True)
     products_missing_description_count = models.IntegerField(null=True, blank=True)
@@ -59,10 +69,12 @@ class DataQualityAggregationMixin(models.Model):
         abstract = True
 
 class DataQualityQuarterlyAggregation(DataQualityAggregationMixin, QuarterlyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Year: {self.year}, Quarter: {self.quarter}"
 
 class DataQualityAnnualAggregation(DataQualityAggregationMixin, YearlyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Year: {self.year}"
 
 
 class SalesAggregationMixin(models.Model):
@@ -77,7 +89,7 @@ class SalesAggregationMixin(models.Model):
     days_between_sale_and_payment = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     customers_count = models.IntegerField(null=True, blank=True)
     sold_products_count = models.IntegerField(null=True, blank=True)
-    sold_products_count_by_category = models.JSONField(null=True, blank=True)  # Puoi espandere questa struttura con campi specifici per categoria
+    sold_products_count_by_category = models.JSONField(null=True, blank=True)
     gross_margin = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     average_sales_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
 
@@ -85,19 +97,24 @@ class SalesAggregationMixin(models.Model):
         abstract = True
 
 class SalesDailyAggregation(SalesAggregationMixin, DailyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Date: {self.date}"
 
 class SalesWeeklyAggregation(SalesAggregationMixin, WeeklyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Year: {self.year}, Week: {self.week}"
 
 class SalesMonthlyAggregation(SalesAggregationMixin, MonthlyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Year: {self.year}, Month: {self.month}"
 
 class SalesQuarterlyAggregation(SalesAggregationMixin, QuarterlyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Year: {self.year}, Quarter: {self.quarter}"
 
 class SalesAnnualAggregation(SalesAggregationMixin, YearlyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Year: {self.year}"
 
 
 class OrdersAggregationMixin(models.Model):
@@ -112,7 +129,7 @@ class OrdersAggregationMixin(models.Model):
     days_between_order_and_payment = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     suppliers_count = models.IntegerField(null=True, blank=True)
     ordered_products_count = models.IntegerField(null=True, blank=True)
-    ordered_products_count_by_category = models.JSONField(null=True, blank=True)  # Puoi espandere questa struttura con campi specifici per categoria
+    ordered_products_count_by_category = models.JSONField(null=True, blank=True)
     gross_margin = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     average_order_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True)
     growth_rate_previous_period = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
@@ -122,16 +139,21 @@ class OrdersAggregationMixin(models.Model):
         abstract = True
 
 class OrdersDailyAggregation(OrdersAggregationMixin, DailyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Date: {self.date}"
 
 class OrdersWeeklyAggregation(OrdersAggregationMixin, WeeklyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Year: {self.year}, Week: {self.week}"
 
 class OrdersMonthlyAggregation(OrdersAggregationMixin, MonthlyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Year: {self.year}, Month: {self.month}"
 
 class OrdersQuarterlyAggregation(OrdersAggregationMixin, QuarterlyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Year: {self.year}, Quarter: {self.quarter}"
 
 class OrdersAnnualAggregation(OrdersAggregationMixin, YearlyAggregationBase):
-    pass
+    def __str__(self):
+        return f"Year: {self.year}"

@@ -82,7 +82,7 @@ def aggregate_sales_daily():
         logger.info(f'Aggregazione giornaliera delle vendite completata per il giorno {today}.')
 
     except Exception as e:
-            logger.error(f'Errore durante l\'aggregazione giornaliera delle vendite per il giorno {today}: {e}')
+            logger.error(f'Errore durante l\'aggregazione giornaliera delle vendite per il giorno {today}: {e}', exc_info=True)
 
 def aggregate_sales_weekly():
     try:
@@ -145,7 +145,7 @@ def aggregate_sales_weekly():
         logger.info(f'Aggregazione settimanale delle vendite completata per la settimana {start_of_week} - {end_of_week}.')
 
     except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione settimanale delle vendite per la settimana {start_of_week} - {end_of_week}: {e}')
+        logger.error(f'Errore durante l\'aggregazione settimanale delle vendite per la settimana {start_of_week} - {end_of_week}: {e}', exc_info=True)
 
 def aggregate_sales_monthly():
     try:
@@ -208,7 +208,7 @@ def aggregate_sales_monthly():
         logger.info(f'Aggregazione mensile delle vendite completata per il mese {start_of_month}.')
 
     except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione mensile delle vendite per il mese {start_of_month}: {e}')
+        logger.error(f'Errore durante l\'aggregazione mensile delle vendite per il mese {start_of_month}: {e}', exc_info=True)
 
 def aggregate_sales_quarterly():
     try:
@@ -272,7 +272,7 @@ def aggregate_sales_quarterly():
         logger.info(f'Aggregazione trimestrale delle vendite completata per il trimestre {quarter}.')
 
     except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione trimestrale delle vendite per il trimestre {quarter}: {e}')
+        logger.error(f'Errore durante l\'aggregazione trimestrale delle vendite per il trimestre {quarter}: {e}', exc_info=True)
 
 def aggregate_sales_annually():
     try:
@@ -335,4 +335,4 @@ def aggregate_sales_annually():
         logger.info(f'Aggregazione annuale delle vendite completata per l\'anno {start_of_year.year}.')
 
     except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione annuale delle vendite per l\'anno {start_of_year.year}: {e}')
+        logger.error(f'Errore durante l\'aggregazione annuale delle vendite per l\'anno {start_of_year.year}: {e}', exc_info=True)

@@ -70,7 +70,7 @@ def aggregate_orders_daily():
         logger.info(f'Aggregazione giornaliera degli ordini completata per il giorno {today}.')
 
     except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione giornaliera degli ordini per il giorno {today}: {e}')
+        logger.error(f'Errore durante l\'aggregazione giornaliera degli ordini per il giorno {today}: {e}', exc_info=True)
 
 def aggregate_orders_weekly():
     try:
@@ -133,7 +133,7 @@ def aggregate_orders_weekly():
         logger.info(f'Aggregazione settimanale degli ordini completata per la settimana {start_of_week} - {end_of_week}.')
 
     except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione settimanale degli ordini per la settimana {start_of_week} - {end_of_week}: {e}')
+        logger.error(f'Errore durante l\'aggregazione settimanale degli ordini per la settimana {start_of_week} - {end_of_week}: {e}', exc_info=True)
 
 def aggregate_orders_monthly():
     try:
@@ -196,7 +196,7 @@ def aggregate_orders_monthly():
         logger.info(f'Aggregazione mensile degli ordini completata per il mese {start_of_month}.')
 
     except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione mensile degli ordini per il mese {start_of_month}: {e}')
+        logger.error(f'Errore durante l\'aggregazione mensile degli ordini per il mese {start_of_month}: {e}', exc_info=True)
 
 def aggregate_orders_quarterly():
     try:
@@ -260,7 +260,7 @@ def aggregate_orders_quarterly():
         logger.info(f'Aggregazione trimestrale degli ordini completata per il trimestre {quarter}.')
 
     except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione trimestrale degli ordini per il trimestre {quarter}: {e}')
+        logger.error(f'Errore durante l\'aggregazione trimestrale degli ordini per il trimestre {quarter}: {e}', exc_info=True)
 
 def aggregate_orders_annually():
     try:
@@ -323,4 +323,4 @@ def aggregate_orders_annually():
         logger.info(f'Aggregazione annuale degli ordini completata per l\'anno {start_of_year.year}.')
 
     except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione annuale degli ordini per l\'anno {start_of_year.year}: {e}')
+        logger.error(f'Errore durante l\'aggregazione annuale degli ordini per l\'anno {start_of_year.year}: {e}', exc_info=True)
