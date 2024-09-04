@@ -29,7 +29,7 @@ class ProductCategory(models.Model):
     
 
 class Product(models.Model):
-    name = models.CharField(_("nome"), max_length=100)
+    name = models.CharField(_("nome"), max_length=200)
     internal_code = models.CharField(_("codice interno"), max_length=50, unique=True, db_index=True, editable=False)
     category = models.ForeignKey('ProductCategory', on_delete=models.SET_NULL, null=True, blank=True, related_name='products', verbose_name=_("categoria"))
     stock_quantity = models.PositiveIntegerField(_("quantità in stock"), default=0)

@@ -9,7 +9,7 @@ from inventory.models.aggregated import (
 )
 
 
-logger = logging.getLogger('app')
+logger = logging.getLogger('tasks')
 
 def aggregate_orders_daily():
     try:

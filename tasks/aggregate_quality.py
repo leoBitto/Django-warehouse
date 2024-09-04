@@ -5,7 +5,7 @@ from ..models.aggregated import DataQualityQuarterlyAggregation, DataQualityAnnu
 from inventory.models.base import Product, Order, Sale
 import logging
 
-logger = logging.getLogger('app')
+logger = logging.getLogger('tasks')
 
 def calculate_quality_aggregates(start_date=None, end_date=None):
     # Aggregazione della qualità dei dati
@@ -51,12 +51,13 @@ def aggregate_quality_year():
         quality_aggregations = calculate_quality_aggregates(start_date=start_of_year, end_date=end_of_year)
 
         with transaction.atomic():
-            DataQualityAnnualAggregation.objects.using('gold').update_or_create(
+            _, created = DataQualityAnnualAggregation.objects.using('gold').update_or_create(
                 year=today.year,
                 defaults=quality_aggregations
             )
 
-        logger.info(f'Inventory quality aggregation for {today.year} completed successfully.')
+
+        logger.info(f'Inventory quality aggregation for {today.year} completed.')
     except Exception as e:
         logger.error(f'Error in inventory quality aggregation for {today.year}: {e}', exc_info=True)
 
@@ -70,12 +71,12 @@ def aggregate_quality_quarter():
         quality_aggregations = calculate_quality_aggregates(start_date=start_of_quarter, end_date=end_of_quarter)
 
         with transaction.atomic():
-            DataQualityQuarterlyAggregation.objects.using('gold').update_or_create(
+            _, created = DataQualityQuarterlyAggregation.objects.using('gold').update_or_create(
                 year=today.year,
                 quarter=quarter,
                 defaults=quality_aggregations
             )
 
-        logger.info(f'Inventory quality aggregation for {today.year} quarter {quarter} completed successfully.')
+        logger.info(f'Inventory quality aggregation for {today.year} quarter {quarter} completed.')
     except Exception as e:
         logger.error(f'Error in inventory quality aggregation for {today.year} quarter {quarter}: {e}', exc_info=True)

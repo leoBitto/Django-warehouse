@@ -5,7 +5,7 @@ from inventory.models.base import Product, Order, Sale
 from inventory.models.aggregated import ProductAnnualAggregation, ProductQuarterlyAggregation, ProductMonthlyAggregation
 import logging
 
-logger = logging.getLogger('app')
+logger = logging.getLogger('tasks')
 
 def calculate_aggregations(product, start_date, end_date):
     orders = Order.objects.filter(sale_date__range=[start_date, end_date], product=product)
@@ -35,12 +35,15 @@ def aggregate_product_quarter():
             defaults = calculate_aggregations(product, start_of_quarter, end_of_quarter)
             
             with transaction.atomic():
-                ProductQuarterlyAggregation.objects.using('gold').update_or_create(
-                    product=product,
+                _, created = ProductQuarterlyAggregation.objects.using('gold').update_or_create(
                     year=today.year,
                     quarter=quarter,
+                    product_name=product.name,
+                    product_internal_code=product.internal_code,
                     defaults=defaults
                 )
+                if created:
+                    logger.info(f"a new aggregation has been created for {today.year} quarter {quarter} and product {product.name}")
             
             logger.info(f'Aggregazione trimestrale per prodotto {product} completata per il trimestre {today.year} - {quarter}.')
 
@@ -53,7 +56,6 @@ def aggregate_product_year():
     start_of_year = today.replace(month=1, day=1)
     end_of_year = today.replace(month=12, day=31)
     
-        
     try:
         today = timezone.now().date()
         
@@ -61,11 +63,14 @@ def aggregate_product_year():
             defaults = calculate_aggregations(product, start_of_year, end_of_year)
             
             with transaction.atomic():
-                ProductAnnualAggregation.objects.using('gold').update_or_create(
-                    product=product,
+                _, created = ProductAnnualAggregation.objects.using('gold').update_or_create(
                     year=today.year,
+                    product_name=product.name,
+                    product_internal_code=product.internal_code,
                     defaults=defaults
                 )
+                if created:
+                    logger.info(f"a new aggregation has been created for {today.year} product {product.name}")
             
             logger.info(f'Aggregazione annuale per prodotto {product} completata per l\'anno  {today.year}')
 
@@ -78,20 +83,23 @@ def aggregate_product_month():
     start_of_month = today.replace(day=1)
     end_of_month = (start_of_month + timezone.timedelta(days=31)).replace(day=1) - timezone.timedelta(days=1)
     
-            
     try:
         today = timezone.now().date()
         
         for product in Product.objects.all():
             defaults = calculate_aggregations(product, start_of_month, end_of_month)
-            
+            logger.info(f'Defaults for product {product.id}: {defaults}')
+
             with transaction.atomic():
-                ProductAnnualAggregation.objects.using('gold').update_or_create(
-                    product=product,
+                _, created = ProductMonthlyAggregation.objects.using('gold').update_or_create(
                     year=today.year,
                     month=today.month,
+                    product_name=product.name,
+                    product_internal_code=product.internal_code,
                     defaults=defaults
                 )
+                if created:
+                    logger.info(f"a new aggregation has been created for {today.year} month {today.month} product {product.name}")
             
             logger.info(f'Aggregazione mensile per prodotto {product} completata per il mese {today.month} anno {today.year}')
 
