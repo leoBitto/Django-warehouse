@@ -1,23 +1,14 @@
 import logging
-from django.utils import timezone
 from django.db import transaction
-from django.core.serializers.json import DjangoJSONEncoder
-import json
 from django.db.models import Avg, Count, Sum, F, ExpressionWrapper, DecimalField
 from inventory.models.base import Sale
 from inventory.models.aggregated import (
     SalesDailyAggregation, SalesWeeklyAggregation, SalesMonthlyAggregation, 
     SalesQuarterlyAggregation, SalesAnnualAggregation
 )
+from .utils import *
 
 logger = logging.getLogger('tasks')
-
-def calculate_gross_margin(sales):
-    total_gross_margin = 0
-    for sale in sales:
-        # Calcoliamo il margine lordo per ogni vendita, usando il prezzo medio d'acquisto.
-        total_gross_margin = (total_gross_margin + (sale.unit_price - sale.product.average_purchase_price) )/2
-    return total_gross_margin
 
 
 def aggregate_sales(date_range):
@@ -56,14 +47,6 @@ def aggregate_sales(date_range):
         customers_count = sales.aggregate(Count('customer', distinct=True))['customer__count'] or 0
         sold_products_count = sales.aggregate(Sum('quantity'))['quantity__sum'] or 0
 
-        # Estrarre i prodotti venduti per categoria
-        sold_products_count_by_category = list(sales.values('product__category').annotate(
-            total_sold=Sum('quantity')
-        ))
-
-        # Serializzare i dati in JSON
-        sold_products_count_by_category_json = json.dumps(sold_products_count_by_category, cls=DjangoJSONEncoder)
-
         # Calcolo del gross_margin in Python
         gross_margin = calculate_gross_margin(sales)
         
@@ -80,7 +63,6 @@ def aggregate_sales(date_range):
                     'days_between_sale_and_payment': days_between_sale_and_payment,
                     'customers_count': customers_count,
                     'sold_products_count': sold_products_count,
-                    'sold_products_count_by_category': sold_products_count_by_category_json,
                     'gross_margin': gross_margin,
                     'average_sales_value': average_sales_value,
                 }
@@ -90,30 +72,6 @@ def aggregate_sales(date_range):
     except Exception as e:
         logger.error(f"Errore durante l'aggregazione: {e}", exc_info=True)
 
-# Helper functions per calcolare gli intervalli di date e i parametri corretti
-def get_today():
-    return timezone.now().date()
-
-def get_week_params(today):
-    start_of_week = today - timezone.timedelta(days=today.weekday())
-    end_of_week = start_of_week + timezone.timedelta(days=6)
-    return {'week': today.isocalendar()[1], 'year': today.year}, [start_of_week, end_of_week]
-
-def get_month_params(today):
-    start_of_month = today.replace(day=1)
-    end_of_month = (start_of_month + timezone.timedelta(days=32)).replace(day=1) - timezone.timedelta(days=1)
-    return {'month': today.month, 'year': today.year}, [start_of_month, end_of_month]
-
-def get_quarter_params(today):
-    quarter = (today.month - 1) // 3 + 1
-    start_of_quarter = timezone.datetime(today.year, 3 * quarter - 2, 1).date()
-    end_of_quarter = (timezone.datetime(today.year, 3 * quarter + 1, 1) - timezone.timedelta(days=1)).date()
-    return {'quarter': quarter, 'year': today.year}, [start_of_quarter, end_of_quarter]
-
-def get_year_params(today):
-    start_of_year = today.replace(month=1, day=1)
-    end_of_year = today.replace(month=12, day=31)
-    return {'year': today.year}, [start_of_year, end_of_year]
 
 # Funzioni specifiche di aggregazione che usano la funzione generica
 def aggregate_sales_daily():

@@ -1,25 +1,23 @@
 import logging
-from django.utils import timezone
 from django.db import transaction
-from django.db.models import Avg, Count, Sum, F
+from django.db.models import Avg, Count, Sum, F, ExpressionWrapper, DecimalField
 from inventory.models.base import Order
 from inventory.models.aggregated import (
     OrdersDailyAggregation, OrdersWeeklyAggregation, OrdersMonthlyAggregation, 
     OrdersQuarterlyAggregation, OrdersAnnualAggregation
 )
-
+from .utils import *
 
 logger = logging.getLogger('tasks')
 
-def aggregate_orders_daily():
+
+def aggregate_orders(date_range):
     try:
-        today = timezone.now().date()
+        orders = Order.objects.filter(sale_date__range=date_range)
 
-        # Recupero degli ordini del giorno corrente
-        orders = Order.objects.filter(sale_date__date=today)
-
-        # Aggregazione delle metriche
-        total_orders_value = orders.aggregate(Sum('total_price'))['total_price__sum'] or 0
+        total_orders_value = orders.aggregate(
+            total_value=Sum(ExpressionWrapper(F('quantity') * F('unit_price'), output_field=DecimalField()))
+        )['total_value'] or 0
         orders_pending_count = orders.filter(status='pending').count()
         orders_sold_count = orders.filter(status='sold').count()
         orders_delivered_count = orders.filter(status='delivered').count()
@@ -27,300 +25,100 @@ def aggregate_orders_daily():
         orders_cancelled_count = orders.filter(status='cancelled').count()
 
         days_between_order_and_delivery = orders.exclude(delivery_date__isnull=True).aggregate(
-            Avg(F('delivery_date') - F('sale_date'))
-        )['delivery_date__sale_date__avg'].days or 0
+            avg_days=Avg(F('delivery_date') - F('sale_date'))
+        )['avg_days']
+        days_between_order_and_delivery = days_between_order_and_delivery.days if days_between_order_and_delivery else 0
 
         days_between_order_and_payment = orders.exclude(payment_date__isnull=True).aggregate(
-            Avg(F('payment_date') - F('sale_date'))
-        )['payment_date__sale_date__avg'].days or 0
+            avg_days=Avg(F('payment_date') - F('sale_date'))
+        )['avg_days']
+        days_between_order_and_payment = days_between_order_and_payment.days if days_between_order_and_payment else 0
 
         suppliers_count = orders.aggregate(Count('supplier', distinct=True))['supplier__count'] or 0
         ordered_products_count = orders.aggregate(Sum('quantity'))['quantity__sum'] or 0
 
-        ordered_products_count_by_category = orders.values('product__category').annotate(
-            total_ordered=Sum('quantity')
-        )
-
-        gross_margin = orders.aggregate(
-            gross_margin=Sum(F('total_price') - F('quantity') * F('product__cost'))
-        )['gross_margin'] or 0
-
+        gross_margin = calculate_gross_margin(orders)
         average_order_value = total_orders_value / orders_sold_count if orders_sold_count else 0
 
-        with transaction.atomic():
-            OrdersDailyAggregation.objects.using('gold').update_or_create(
-                date=today,
-                defaults={
-                    'total_orders_value': total_orders_value,
-                    'orders_pending_count': orders_pending_count,
-                    'orders_sold_count': orders_sold_count,
-                    'orders_delivered_count': orders_delivered_count,
-                    'orders_paid_count': orders_paid_count,
-                    'orders_cancelled_count': orders_cancelled_count,
-                    'days_between_order_and_delivery': days_between_order_and_delivery,
-                    'days_between_order_and_payment': days_between_order_and_payment,
-                    'suppliers_count': suppliers_count,
-                    'ordered_products_count': ordered_products_count,
-                    'ordered_products_count_by_category': ordered_products_count_by_category,
-                    'gross_margin': gross_margin,
-                    'average_order_value': average_order_value,
-                }
-            )
-
-        logger.info(f'Aggregazione giornaliera degli ordini completata per il giorno {today}.')
+        return {
+            'total_orders_value': total_orders_value,
+            'orders_pending_count': orders_pending_count,
+            'orders_sold_count': orders_sold_count,
+            'orders_delivered_count': orders_delivered_count,
+            'orders_paid_count': orders_paid_count,
+            'orders_cancelled_count': orders_cancelled_count,
+            'days_between_order_and_delivery': days_between_order_and_delivery,
+            'days_between_order_and_payment': days_between_order_and_payment,
+            'suppliers_count': suppliers_count,
+            'ordered_products_count': ordered_products_count,
+            'gross_margin': gross_margin,
+            'average_order_value': average_order_value,
+        }
 
     except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione giornaliera degli ordini per il giorno {today}: {e}', exc_info=True)
+        logger.error(f"Errore durante l'aggregazione degli ordini: {e}", exc_info=True)
+
+
+# Funzioni specifiche di aggregazione
+def aggregate_orders_daily():
+    today = get_today()
+    date_range = [today, today]
+
+    with transaction.atomic():
+        OrdersDailyAggregation.objects.using('gold').update_or_create(
+            date=today,
+            defaults=aggregate_orders(date_range=date_range)
+        )
+
+    logger.info(f'Aggregazione giornaliera degli ordini completata per il giorno {today}.')
 
 def aggregate_orders_weekly():
-    try:
-        today = timezone.now().date()
-        start_of_week = today - timezone.timedelta(days=today.weekday())
-        end_of_week = start_of_week + timezone.timedelta(days=6)
+    today = get_today()
+    date_params, date_range = get_week_params(today)
 
-        # Recupero degli ordini della settimana corrente
-        orders = Order.objects.filter(sale_date__range=[start_of_week, end_of_week])
-
-        # Aggregazione delle metriche
-        total_orders_value = orders.aggregate(Sum('total_price'))['total_price__sum'] or 0
-        orders_pending_count = orders.filter(status='pending').count()
-        orders_sold_count = orders.filter(status='sold').count()
-        orders_delivered_count = orders.filter(status='delivered').count()
-        orders_paid_count = orders.filter(status='paid').count()
-        orders_cancelled_count = orders.filter(status='cancelled').count()
-
-        days_between_order_and_delivery = orders.exclude(delivery_date__isnull=True).aggregate(
-            Avg(F('delivery_date') - F('sale_date'))
-        )['delivery_date__sale_date__avg'].days or 0
-
-        days_between_order_and_payment = orders.exclude(payment_date__isnull=True).aggregate(
-            Avg(F('payment_date') - F('sale_date'))
-        )['payment_date__sale_date__avg'].days or 0
-
-        suppliers_count = orders.aggregate(Count('supplier', distinct=True))['supplier__count'] or 0
-        ordered_products_count = orders.aggregate(Sum('quantity'))['quantity__sum'] or 0
-
-        ordered_products_count_by_category = orders.values('product__category').annotate(
-            total_ordered=Sum('quantity')
+    with transaction.atomic():
+        OrdersWeeklyAggregation.objects.using('gold').update_or_create(
+            year=date_params['year'],
+            week=date_params['week'],
+            defaults=aggregate_orders(date_range=date_range)
         )
 
-        gross_margin = orders.aggregate(
-            gross_margin=Sum(F('total_price') - F('quantity') * F('product__cost'))
-        )['gross_margin'] or 0
-
-        average_order_value = total_orders_value / orders_sold_count if orders_sold_count else 0
-
-        with transaction.atomic():
-            OrdersWeeklyAggregation.objects.using('gold').update_or_create(
-                start_date=start_of_week,
-                defaults={
-                    'total_orders_value': total_orders_value,
-                    'orders_pending_count': orders_pending_count,
-                    'orders_sold_count': orders_sold_count,
-                    'orders_delivered_count': orders_delivered_count,
-                    'orders_paid_count': orders_paid_count,
-                    'orders_cancelled_count': orders_cancelled_count,
-                    'days_between_order_and_delivery': days_between_order_and_delivery,
-                    'days_between_order_and_payment': days_between_order_and_payment,
-                    'suppliers_count': suppliers_count,
-                    'ordered_products_count': ordered_products_count,
-                    'ordered_products_count_by_category': ordered_products_count_by_category,
-                    'gross_margin': gross_margin,
-                    'average_order_value': average_order_value,
-                }
-            )
-
-        logger.info(f'Aggregazione settimanale degli ordini completata per la settimana {start_of_week} - {end_of_week}.')
-
-    except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione settimanale degli ordini per la settimana {start_of_week} - {end_of_week}: {e}', exc_info=True)
+    logger.info(f'Aggregazione settimanale degli ordini completata per la settimana {date_params["week"]}, {date_params["year"]}.')
 
 def aggregate_orders_monthly():
-    try:
-        today = timezone.now().date()
-        start_of_month = today.replace(day=1)
-        end_of_month = (start_of_month + timezone.timedelta(days=32)).replace(day=1) - timezone.timedelta(days=1)
+    today = get_today()
+    date_params, date_range = get_month_params(today)
 
-        # Recupero degli ordini del mese corrente
-        orders = Order.objects.filter(sale_date__range=[start_of_month, end_of_month])
-
-        # Aggregazione delle metriche
-        total_orders_value = orders.aggregate(Sum('total_price'))['total_price__sum'] or 0
-        orders_pending_count = orders.filter(status='pending').count()
-        orders_sold_count = orders.filter(status='sold').count()
-        orders_delivered_count = orders.filter(status='delivered').count()
-        orders_paid_count = orders.filter(status='paid').count()
-        orders_cancelled_count = orders.filter(status='cancelled').count()
-
-        days_between_order_and_delivery = orders.exclude(delivery_date__isnull=True).aggregate(
-            Avg(F('delivery_date') - F('sale_date'))
-        )['delivery_date__sale_date__avg'].days or 0
-
-        days_between_order_and_payment = orders.exclude(payment_date__isnull=True).aggregate(
-            Avg(F('payment_date') - F('sale_date'))
-        )['payment_date__sale_date__avg'].days or 0
-
-        suppliers_count = orders.aggregate(Count('supplier', distinct=True))['supplier__count'] or 0
-        ordered_products_count = orders.aggregate(Sum('quantity'))['quantity__sum'] or 0
-
-        ordered_products_count_by_category = orders.values('product__category').annotate(
-            total_ordered=Sum('quantity')
+    with transaction.atomic():
+        OrdersMonthlyAggregation.objects.using('gold').update_or_create(
+            year=date_params['year'],
+            month=date_params['month'],
+            defaults=aggregate_orders(date_range=date_range)
         )
 
-        gross_margin = orders.aggregate(
-            gross_margin=Sum(F('total_price') - F('quantity') * F('product__cost'))
-        )['gross_margin'] or 0
-
-        average_order_value = total_orders_value / orders_sold_count if orders_sold_count else 0
-
-        with transaction.atomic():
-            OrdersMonthlyAggregation.objects.using('gold').update_or_create(
-                start_date=start_of_month,
-                defaults={
-                    'total_orders_value': total_orders_value,
-                    'orders_pending_count': orders_pending_count,
-                    'orders_sold_count': orders_sold_count,
-                    'orders_delivered_count': orders_delivered_count,
-                    'orders_paid_count': orders_paid_count,
-                    'orders_cancelled_count': orders_cancelled_count,
-                    'days_between_order_and_delivery': days_between_order_and_delivery,
-                    'days_between_order_and_payment': days_between_order_and_payment,
-                    'suppliers_count': suppliers_count,
-                    'ordered_products_count': ordered_products_count,
-                    'ordered_products_count_by_category': ordered_products_count_by_category,
-                    'gross_margin': gross_margin,
-                    'average_order_value': average_order_value,
-                }
-            )
-
-        logger.info(f'Aggregazione mensile degli ordini completata per il mese {start_of_month}.')
-
-    except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione mensile degli ordini per il mese {start_of_month}: {e}', exc_info=True)
+    logger.info(f'Aggregazione mensile degli ordini completata per il mese {date_params["month"]}, {date_params["year"]}.')
 
 def aggregate_orders_quarterly():
-    try:
-        today = timezone.now().date()
-        quarter = (today.month - 1) // 3 + 1
-        start_of_quarter = timezone.datetime(today.year, 3 * quarter - 2, 1).date()
-        end_of_quarter = (timezone.datetime(today.year, 3 * quarter + 1, 1) - timezone.timedelta(days=1)).date()
+    today = get_today()
+    date_params, date_range = get_quarter_params(today)
 
-        # Recupero degli ordini del trimestre corrente
-        orders = Order.objects.filter(sale_date__range=[start_of_quarter, end_of_quarter])
-
-        # Aggregazione delle metriche
-        total_orders_value = orders.aggregate(Sum('total_price'))['total_price__sum'] or 0
-        orders_pending_count = orders.filter(status='pending').count()
-        orders_sold_count = orders.filter(status='sold').count()
-        orders_delivered_count = orders.filter(status='delivered').count()
-        orders_paid_count = orders.filter(status='paid').count()
-        orders_cancelled_count = orders.filter(status='cancelled').count()
-
-        days_between_order_and_delivery = orders.exclude(delivery_date__isnull=True).aggregate(
-            Avg(F('delivery_date') - F('sale_date'))
-        )['delivery_date__sale_date__avg'].days or 0
-
-        days_between_order_and_payment = orders.exclude(payment_date__isnull=True).aggregate(
-            Avg(F('payment_date') - F('sale_date'))
-        )['payment_date__sale_date__avg'].days or 0
-
-        suppliers_count = orders.aggregate(Count('supplier', distinct=True))['supplier__count'] or 0
-        ordered_products_count = orders.aggregate(Sum('quantity'))['quantity__sum'] or 0
-
-        ordered_products_count_by_category = orders.values('product__category').annotate(
-            total_ordered=Sum('quantity')
+    with transaction.atomic():
+        OrdersQuarterlyAggregation.objects.using('gold').update_or_create(
+            year=date_params['year'],
+            quarter=date_params['quarter'],
+            defaults=aggregate_orders(date_range=date_range)
         )
 
-        gross_margin = orders.aggregate(
-            gross_margin=Sum(F('total_price') - F('quantity') * F('product__cost'))
-        )['gross_margin'] or 0
-
-        average_order_value = total_orders_value / orders_sold_count if orders_sold_count else 0
-
-        with transaction.atomic():
-            OrdersQuarterlyAggregation.objects.using('gold').update_or_create(
-                start_date=start_of_quarter,
-                defaults={
-                    'total_orders_value': total_orders_value,
-                    'orders_pending_count': orders_pending_count,
-                    'orders_sold_count': orders_sold_count,
-                    'orders_delivered_count': orders_delivered_count,
-                    'orders_paid_count': orders_paid_count,
-                    'orders_cancelled_count': orders_cancelled_count,
-                    'days_between_order_and_delivery': days_between_order_and_delivery,
-                    'days_between_order_and_payment': days_between_order_and_payment,
-                    'suppliers_count': suppliers_count,
-                    'ordered_products_count': ordered_products_count,
-                    'ordered_products_count_by_category': ordered_products_count_by_category,
-                    'gross_margin': gross_margin,
-                    'average_order_value': average_order_value,
-                }
-            )
-
-        logger.info(f'Aggregazione trimestrale degli ordini completata per il trimestre {quarter}.')
-
-    except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione trimestrale degli ordini per il trimestre {quarter}: {e}', exc_info=True)
+    logger.info(f'Aggregazione trimestrale degli ordini completata per il trimestre {date_params["quarter"]}, {date_params["year"]}.')
 
 def aggregate_orders_annually():
-    try:
-        today = timezone.now().date()
-        start_of_year = today.replace(month=1, day=1)
-        end_of_year = today.replace(month=12, day=31)
+    today = get_today()
+    date_params, date_range = get_year_params(today)
 
-        # Recupero degli ordini dell'anno corrente
-        orders = Order.objects.filter(sale_date__range=[start_of_year, end_of_year])
-
-        # Aggregazione delle metriche
-        total_orders_value = orders.aggregate(Sum('total_price'))['total_price__sum'] or 0
-        orders_pending_count = orders.filter(status='pending').count()
-        orders_sold_count = orders.filter(status='sold').count()
-        orders_delivered_count = orders.filter(status='delivered').count()
-        orders_paid_count = orders.filter(status='paid').count()
-        orders_cancelled_count = orders.filter(status='cancelled').count()
-
-        days_between_order_and_delivery = orders.exclude(delivery_date__isnull=True).aggregate(
-            Avg(F('delivery_date') - F('sale_date'))
-        )['delivery_date__sale_date__avg'].days or 0
-
-        days_between_order_and_payment = orders.exclude(payment_date__isnull=True).aggregate(
-            Avg(F('payment_date') - F('sale_date'))
-        )['payment_date__sale_date__avg'].days or 0
-
-        suppliers_count = orders.aggregate(Count('supplier', distinct=True))['supplier__count'] or 0
-        ordered_products_count = orders.aggregate(Sum('quantity'))['quantity__sum'] or 0
-
-        ordered_products_count_by_category = orders.values('product__category').annotate(
-            total_ordered=Sum('quantity')
+    with transaction.atomic():
+        OrdersAnnualAggregation.objects.using('gold').update_or_create(
+            year=date_params['year'],
+            defaults=aggregate_orders(date_range=date_range)
         )
 
-        gross_margin = orders.aggregate(
-            gross_margin=Sum(F('total_price') - F('quantity') * F('product__cost'))
-        )['gross_margin'] or 0
-
-        average_order_value = total_orders_value / orders_sold_count if orders_sold_count else 0
-
-        with transaction.atomic():
-            OrdersAnnualAggregation.objects.using('gold').update_or_create(
-                start_date=start_of_year,
-                defaults={
-                    'total_orders_value': total_orders_value,
-                    'orders_pending_count': orders_pending_count,
-                    'orders_sold_count': orders_sold_count,
-                    'orders_delivered_count': orders_delivered_count,
-                    'orders_paid_count': orders_paid_count,
-                    'orders_cancelled_count': orders_cancelled_count,
-                    'days_between_order_and_delivery': days_between_order_and_delivery,
-                    'days_between_order_and_payment': days_between_order_and_payment,
-                    'suppliers_count': suppliers_count,
-                    'ordered_products_count': ordered_products_count,
-                    'ordered_products_count_by_category': ordered_products_count_by_category,
-                    'gross_margin': gross_margin,
-                    'average_order_value': average_order_value,
-                }
-            )
-
-        logger.info(f'Aggregazione annuale degli ordini completata per l\'anno {start_of_year.year}.')
-
-    except Exception as e:
-        logger.error(f'Errore durante l\'aggregazione annuale degli ordini per l\'anno {start_of_year.year}: {e}', exc_info=True)
+    logger.info(f'Aggregazione annuale degli ordini completata per l\'anno {date_params["year"]}.')

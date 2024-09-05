@@ -1,0 +1,49 @@
+{% extends "backoffice/backoffice_base.html" %}
+{% load static %}
+
+{% block dashboard_app %}
+<div class="container mt-4">
+    <h1>Report: {{ report_type|title }} - {{ aggregation_type|title }}</h1>
+
+    <!-- Verifica se ci sono dati -->
+    {% if data %}
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <!-- Usa le chiavi del primo dizionario per generare le intestazioni della tabella, escludendo 'id' -->
+                    {% for key in data.0.0.keys %}
+                        {% if key != 'id' %}
+                            <th>{{ key|title }}</th>
+                        {% endif %}
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Itera su ogni queryset (ogni lista di dizionari per un periodo) -->
+                {% for period_data in data %}
+                    <!-- Itera su ogni record (dizionario) all'interno del periodo -->
+                    {% for data_dict in period_data %}
+                        <tr>
+                            <!-- Mostra ciascun valore, escludendo 'id' -->
+                            {% for key, value in data_dict.items %}
+                                {% if key != 'id' %}
+                                    <td>
+                                        <!-- Gestione del campo JSON -->
+                                        {% if value is iterable and value is not string %}
+                                            <pre>{{ value|json_script:"json" }}</pre>
+                                        {% else %}
+                                            {{ value }}
+                                        {% endif %}
+                                    </td>
+                                {% endif %}
+                            {% endfor %}
+                        </tr>
+                    {% endfor %}
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p><em>Non ci sono dati disponibili.</em></p>
+    {% endif %}
+</div>
+{% endblock dashboard_app %}

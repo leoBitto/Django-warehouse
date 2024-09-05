@@ -14,7 +14,7 @@ from inventory.models.aggregated import (
 )
 from backoffice.forms import *
 import logging
-logger = logging.getLogger('app')
+logger = logging.getLogger('reports')
 
 from backoffice.utils import *
 
@@ -57,6 +57,8 @@ class GlobalReportView(LoginRequiredMixin, View):
             previous_periods_data = get_previous_periods(
                 aggregation_model, selected_period, period_type, num_previous_periods=6
             )
+            for data in previous_periods_data:
+                logger.info(f"{data}")
 
             return render(request, 'inventory/reports/report.html', {
                 'data': previous_periods_data,
@@ -281,6 +283,8 @@ class OrdersReportView(LoginRequiredMixin, View):
             previous_periods_data = get_previous_periods(
                 aggregation_model, selected_period, period_type, num_previous_periods=6
             )
+            #logger.info(f"data: {previous_periods_data}")
+
             return render(request, 'inventory/reports/report.html', {
                 'data': previous_periods_data,
                 'report_type': 'Orders',

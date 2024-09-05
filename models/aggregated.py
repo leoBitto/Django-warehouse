@@ -11,10 +11,8 @@ from gold_bi.models import (
 
 class InventoryGlobalAggregationMixin(models.Model):
     distinct_products_count = models.IntegerField(null=True, blank=True, verbose_name=_("Conteggio Prodotti Distinti"))
-    products_count_by_category = models.JSONField(null=True, blank=True, verbose_name=_("Conteggio Prodotti per Categoria"))
     total_products_count = models.IntegerField(null=True, blank=True, verbose_name=_("Conteggio Totale Prodotti"))
     total_inventory_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name=_("Valore Totale Inventario"))
-    inventory_value_by_category = models.JSONField(null=True, blank=True, verbose_name=_("Valore Inventario per Categoria"))
 
     class Meta:
         abstract = True
@@ -86,7 +84,6 @@ class SalesAggregationMixin(models.Model):
     days_between_sale_and_payment = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name=_("Giorni tra Vendita e Pagamento"))
     customers_count = models.IntegerField(null=True, blank=True, verbose_name=_("Conteggio Clienti"))
     sold_products_count = models.IntegerField(null=True, blank=True, verbose_name=_("Conteggio Prodotti Venduti"))
-    sold_products_count_by_category = models.JSONField(null=True, blank=True, verbose_name=_("Conteggio Prodotti Venduti per Categoria"))
     gross_margin = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name=_("Margine Lordo"))
     average_sales_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name=_("Valore Medio Vendite"))
 
@@ -126,11 +123,8 @@ class OrdersAggregationMixin(models.Model):
     days_between_order_and_payment = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name=_("Giorni tra Ordine e Pagamento"))
     suppliers_count = models.IntegerField(null=True, blank=True, verbose_name=_("Conteggio Fornitori"))
     ordered_products_count = models.IntegerField(null=True, blank=True, verbose_name=_("Conteggio Prodotti Ordinati"))
-    ordered_products_count_by_category = models.JSONField(null=True, blank=True, verbose_name=_("Conteggio Prodotti Ordinati per Categoria"))
     gross_margin = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name=_("Margine Lordo"))
     average_order_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name=_("Valore Medio Ordine"))
-    growth_rate_previous_period = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name=_("Tasso di Crescita Periodo Precedente"))
-    growth_rate_same_period_last_year = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name=_("Tasso di Crescita Stesso Periodo Anno Precedente"))
 
     class Meta:
         abstract = True

@@ -42,9 +42,7 @@ def aggregate_product_quarter():
                     product_internal_code=product.internal_code,
                     defaults=defaults
                 )
-                if created:
-                    logger.info(f"a new aggregation has been created for {today.year} quarter {quarter} and product {product.name}")
-            
+
             logger.info(f'Aggregazione trimestrale per prodotto {product} completata per il trimestre {today.year} - {quarter}.')
 
     except Exception as e:
@@ -69,9 +67,7 @@ def aggregate_product_year():
                     product_internal_code=product.internal_code,
                     defaults=defaults
                 )
-                if created:
-                    logger.info(f"a new aggregation has been created for {today.year} product {product.name}")
-            
+
             logger.info(f'Aggregazione annuale per prodotto {product} completata per l\'anno  {today.year}')
 
     except Exception as e:
@@ -88,7 +84,7 @@ def aggregate_product_month():
         
         for product in Product.objects.all():
             defaults = calculate_aggregations(product, start_of_month, end_of_month)
-            logger.info(f'Defaults for product {product.id}: {defaults}')
+            #logger.info(f'Defaults for product {product.id}: {defaults}')
 
             with transaction.atomic():
                 _, created = ProductMonthlyAggregation.objects.using('gold').update_or_create(
@@ -98,9 +94,7 @@ def aggregate_product_month():
                     product_internal_code=product.internal_code,
                     defaults=defaults
                 )
-                if created:
-                    logger.info(f"a new aggregation has been created for {today.year} month {today.month} product {product.name}")
-            
+
             logger.info(f'Aggregazione mensile per prodotto {product} completata per il mese {today.month} anno {today.year}')
 
     except Exception as e:

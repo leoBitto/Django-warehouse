@@ -1,0 +1,35 @@
+{% extends "backoffice/backoffice_base.html" %}
+{% load static %}
+
+{% block dashboard_app %}
+<div class="container mt-4">
+    <h1>Global Report: {{ aggregation_type|title }}</h1>
+
+    <!-- Tabella per visualizzare i dati estratti -->
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Anno</th>
+                <th>Trimestre</th>
+                <th>Conteggio Prodotti Distinti</th>
+                <th>Conteggio Totale Prodotti</th>
+                <th>Valore Totale Inventario</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Itera sui periodi estratti -->
+            {% for period_queryset in data %}
+                {% for obj in period_queryset %}
+                    <tr>
+                        <td>{{ obj.year }}</td>
+                        <td>{{ obj.quarter }}</td>
+                        <td>{{ obj.distinct_products_count }}</td>
+                        <td>{{ obj.total_products_count }}</td>
+                        <td>{{ obj.total_inventory_value }}</td>
+                    </tr>
+                {% endfor %}
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
