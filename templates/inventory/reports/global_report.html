@@ -3,29 +3,51 @@
 
 {% block dashboard_app %}
 <div class="container mt-4">
-    <h1>Global Report: {{ aggregation_type|title }}</h1>
+    <h1>Report Inventario - {{ period_type|title }}</h1>
 
-    <!-- Tabella per visualizzare i dati estratti -->
     <table class="table table-striped">
-        <thead>
+        <thead class="table-dark">
             <tr>
-                <th>Anno</th>
-                <th>Trimestre</th>
-                <th>Conteggio Prodotti Distinti</th>
-                <th>Conteggio Totale Prodotti</th>
-                <th>Valore Totale Inventario</th>
+                {% if period_type == 'day' %}
+                    <th>Data</th>
+                {% elif period_type == 'week' %}
+                    <th>Anno</th>
+                    <th>Settimana</th>
+                {% elif period_type == 'month' %}
+                    <th>Anno</th>
+                    <th>Mese</th>
+                {% elif period_type == 'quarter' %}
+                    <th>Anno</th>
+                    <th>Trimestre</th>
+                {% elif period_type == 'year' %}
+                    <th>Anno</th>
+                {% endif %}
+                <th>Prodotti Distinti</th>
+                <th>Totale Prodotti</th>
+                <th>Valore Inventario (€)</th> <!-- Valore monetario con euro -->
             </tr>
         </thead>
         <tbody>
-            <!-- Itera sui periodi estratti -->
             {% for period_queryset in data %}
                 {% for obj in period_queryset %}
                     <tr>
-                        <td>{{ obj.year }}</td>
-                        <td>{{ obj.quarter }}</td>
+                        {% if period_type == 'day' %}
+                            <td>{{ obj.date }}</td>
+                        {% elif period_type == 'week' %}
+                            <td>{{ obj.year }}</td>
+                            <td>{{ obj.week }}</td>
+                        {% elif period_type == 'month' %}
+                            <td>{{ obj.year }}</td>
+                            <td>{{ obj.month }}</td>
+                        {% elif period_type == 'quarter' %}
+                            <td>{{ obj.year }}</td>
+                            <td>{{ obj.quarter }}</td>
+                        {% elif period_type == 'year' %}
+                            <td>{{ obj.year }}</td>
+                        {% endif %}
                         <td>{{ obj.distinct_products_count }}</td>
                         <td>{{ obj.total_products_count }}</td>
-                        <td>{{ obj.total_inventory_value }}</td>
+                        <td>{{ obj.total_inventory_value|floatformat:2 }} €</td>
                     </tr>
                 {% endfor %}
             {% endfor %}

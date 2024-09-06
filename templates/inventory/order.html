@@ -42,11 +42,11 @@
             <thead class="table-dark">
                 <tr>
                     <th>Fornitore</th>
-                    <th>Prodotto</th>
+                    <th style="width: 35%;">Prodotto</th>
                     <th>Quantità</th>
                     <th>Prezzo Unità</th>
                     <th>Data Ordine</th>
-                    <th>Azioni</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -60,7 +60,7 @@
                         <td>
                             <div class="btn-group" role="group">
                                 <a href="{% url 'inventory:order_detail' order.id %}" class="btn btn-sm btn-outline-dark">
-                                    <i class="fas fa-edit"></i> Modifica
+                                    <i class="fas fa-edit"></i> 
                                 </a>
                             </div>
                         </td>

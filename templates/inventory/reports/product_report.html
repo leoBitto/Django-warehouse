@@ -3,47 +3,79 @@
 
 {% block dashboard_app %}
 <div class="container mt-4">
-    <h1>Report: {{ report_type|title }} - {{ aggregation_type|title }}</h1>
+    <h1>Report Prodotti - {{ period_type|title }}</h1>
 
-    <!-- Verifica se ci sono dati -->
-    {% if data %}
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <!-- Usa le chiavi del primo dizionario per generare le intestazioni della tabella, escludendo 'id' -->
-                    {% for key in data.0.0.keys %}
-                        {% if key != 'id' %}
-                            <th>{{ key|title }}</th>
+    <table id="productTable" class="table table-striped">
+        <thead class="table-dark">
+            <tr>
+                {% if period_type == 'day' %}
+                    <th>Data</th>
+                {% elif period_type == 'week' %}
+                    <th>Anno</th>
+                    <th>Settimana</th>
+                {% elif period_type == 'month' %}
+                    <th>Anno</th>
+                    <th>Mese</th>
+                {% elif period_type == 'quarter' %}
+                    <th>Anno</th>
+                    <th>Trimestre</th>
+                {% elif period_type == 'year' %}
+                    <th>Anno</th>
+                {% endif %}
+                <th style="width: 32%;">Prodotto</th> <!-- Ridimensionamento della colonna -->
+                <th>Codice</th>
+                <th>Quantità</th>
+                <th>Valore</th> <!-- Valore monetario -->
+                <th>Margine Lordo</th> <!-- Valore percentuale -->
+                <th>Fornitori</th>
+                <th>Clienti</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for period_queryset in data %}
+                {% for obj in period_queryset %}
+                    <tr>
+                        {% if period_type == 'day' %}
+                            <td>{{ obj.date }}</td>
+                        {% elif period_type == 'week' %}
+                            <td>{{ obj.year }}</td>
+                            <td>{{ obj.week }}</td>
+                        {% elif period_type == 'month' %}
+                            <td>{{ obj.year }}</td>
+                            <td>{{ obj.month }}</td>
+                        {% elif period_type == 'quarter' %}
+                            <td>{{ obj.year }}</td>
+                            <td>{{ obj.quarter }}</td>
+                        {% elif period_type == 'year' %}
+                            <td>{{ obj.year }}</td>
                         {% endif %}
-                    {% endfor %}
-                </tr>
-            </thead>
-            <tbody>
-                <!-- Itera su ogni queryset (ogni lista di dizionari per un periodo) -->
-                {% for period_data in data %}
-                    <!-- Itera su ogni record (dizionario) all'interno del periodo -->
-                    {% for data_dict in period_data %}
-                        <tr>
-                            <!-- Mostra ciascun valore, escludendo 'id' -->
-                            {% for key, value in data_dict.items %}
-                                {% if key != 'id' %}
-                                    <td>
-                                        <!-- Gestione del campo JSON -->
-                                        {% if value is iterable and value is not string %}
-                                            <pre>{{ value|json_script:"json" }}</pre>
-                                        {% else %}
-                                            {{ value }}
-                                        {% endif %}
-                                    </td>
-                                {% endif %}
-                            {% endfor %}
-                        </tr>
-                    {% endfor %}
+                        <td>{{ obj.product_name }}</td>
+                        <td>{{ obj.product_internal_code }}</td>
+                        <td>{{ obj.product_quantity }}</td>
+                        <td>{{ obj.total_product_value|floatformat:2 }} €</td> <!-- Valore monetario -->
+                        <td>{{ obj.gross_margin|floatformat:2 }} %</td> <!-- Valore percentuale -->
+                        <td>{{ obj.suppliers_count }}</td>
+                        <td>{{ obj.customers_count }}</td>
+                    </tr>
                 {% endfor %}
-            </tbody>
-        </table>
-    {% else %}
-        <p><em>Non ci sono dati disponibili.</em></p>
-    {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
 </div>
-{% endblock dashboard_app %}
+<!-- Script per inizializzare DataTables -->
+<script>
+    $(document).ready(function() {
+        $('#productTable').DataTable({
+            "paging": true,  // Abilita la paginazione
+            "searching": true,  // Abilita la ricerca
+            "ordering": true,  // Abilita l'ordinamento
+            "info": true,  // Mostra informazioni sulla tabella
+            "lengthMenu": [25, 50, 100, 200],  // Opzioni di paginazione
+            "pageLength": 100,  // Imposta il numero di righe di default
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.11.5/i18n/Italian.json"  // Traduzione in italiano
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -125,7 +125,7 @@ class Transaction(models.Model):
     quantity = models.PositiveIntegerField(_("pezzi"))
     unit_price = models.DecimalField(_("prezzo unitario"), max_digits=10, decimal_places=2)
     status = models.CharField(_("stato"), max_length=20, choices=STATUS_CHOICES, default='pending')
-    
+
     class Meta:
         abstract = True
         indexes = [

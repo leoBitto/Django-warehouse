@@ -66,11 +66,13 @@ class TransactionForm(forms.ModelForm):
     class Meta:
         abstract = True
         fields = [
+            
             'product', 'sale_date', 'delivery_date', 
             'payment_date', 'quantity', 'unit_price', 
             'status', 'invoice', 'delivery_note'
         ]
         widgets = {
+            
             'product': forms.Select(attrs={'class': 'form-control'}),
             'sale_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format=('%d/%m/%Y')),
             'delivery_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}, format=('%d/%m/%Y')),

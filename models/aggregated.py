@@ -123,7 +123,6 @@ class OrdersAggregationMixin(models.Model):
     days_between_order_and_payment = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True, verbose_name=_("Giorni tra Ordine e Pagamento"))
     suppliers_count = models.IntegerField(null=True, blank=True, verbose_name=_("Conteggio Fornitori"))
     ordered_products_count = models.IntegerField(null=True, blank=True, verbose_name=_("Conteggio Prodotti Ordinati"))
-    gross_margin = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name=_("Margine Lordo"))
     average_order_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name=_("Valore Medio Ordine"))
 
     class Meta:

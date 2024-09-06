@@ -42,11 +42,11 @@
             <thead class="table-dark">
                 <tr>
                     <th>Cliente</th>
-                    <th>Prodotto</th>
+                    <th style="width: 35%;">Prodotto</th>
                     <th>Quantità</th>
                     <th>Prezzo Unità</th>
                     <th>Data Vendita</th>
-                    <th>Azioni</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -59,7 +59,7 @@
                         <td>{{ sale.sale_date|date:"d/m/Y" }}</td> <!-- Formato data italiano -->
                         <td>
                             <a href="{% url 'inventory:sale_detail' sale.id %}" class="btn btn-sm btn-outline-dark">
-                                <i class="fas fa-edit"></i> Modifica
+                                <i class="fas fa-edit"></i> 
                             </a>
                         </td>
                     </tr>

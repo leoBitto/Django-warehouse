@@ -60,10 +60,10 @@ class GlobalReportView(LoginRequiredMixin, View):
             for data in previous_periods_data:
                 logger.info(f"{data}")
 
-            return render(request, 'inventory/reports/report.html', {
+            return render(request, 'inventory/reports/rglobal_eport.html', {
                 'data': previous_periods_data,
                 'report_type': 'Global',
-                'aggregation_type': period_type,
+                'period_type': period_type,
             })
 
         # Se il form non è valido o non è stato inviato, ricarica il form con gli errori
@@ -122,10 +122,10 @@ class ProductReportView(LoginRequiredMixin, View):
             previous_periods_data = get_previous_periods(
                 aggregation_model, selected_period, period_type, num_previous_periods=6
             )
-            return render(request, 'inventory/reports/report.html', {
+            return render(request, 'inventory/reports/product_report.html', {
                 'data': previous_periods_data,
                 'report_type': 'Product',
-                'aggregation_type': period_type,
+                'period_type': period_type,
             })
 
         context = {
@@ -202,10 +202,10 @@ class SalesReportView(LoginRequiredMixin, View):
             previous_periods_data = get_previous_periods(
                 aggregation_model, selected_period, period_type, num_previous_periods=6
             )
-            return render(request, 'inventory/reports/report.html', {
+            return render(request, 'inventory/reports/sales_report.html', {
                 'data': previous_periods_data,
                 'report_type': 'Sales',
-                'aggregation_type': period_type,
+                'period_type': period_type,
             })
 
         context = {
@@ -285,10 +285,10 @@ class OrdersReportView(LoginRequiredMixin, View):
             )
             #logger.info(f"data: {previous_periods_data}")
 
-            return render(request, 'inventory/reports/report.html', {
+            return render(request, 'inventory/reports/orders_report.html', {
                 'data': previous_periods_data,
                 'report_type': 'Orders',
-                'aggregation_type': period_type,
+                'period_type': period_type,
             })
 
         context = {
@@ -341,10 +341,10 @@ class DataQualityReportView(LoginRequiredMixin, View):
                 aggregation_model, selected_period, period_type, num_previous_periods=6
             )
 
-            return render(request, 'inventory/reports/report.html', {
+            return render(request, 'inventory/reports/quality_report.html', {
                 'data': previous_periods_data,
                 'report_type': 'Data Quality',
-                'aggregation_type': period_type,
+                'period_type': period_type,
             })
 
         context = {

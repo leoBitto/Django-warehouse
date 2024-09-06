@@ -213,7 +213,8 @@ class ProductDetailView(LoginRequiredMixin, View):
         })
 
 
-class DownloadStockDataCSV(View):
+
+class DownloadStockDataCSV(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
         # Creazione della risposta HTTP con tipo di contenuto CSV

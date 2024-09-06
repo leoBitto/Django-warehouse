@@ -37,7 +37,6 @@ def aggregate_orders(date_range):
         suppliers_count = orders.aggregate(Count('supplier', distinct=True))['supplier__count'] or 0
         ordered_products_count = orders.aggregate(Sum('quantity'))['quantity__sum'] or 0
 
-        gross_margin = calculate_gross_margin(orders)
         average_order_value = total_orders_value / orders_sold_count if orders_sold_count else 0
 
         return {
@@ -51,7 +50,6 @@ def aggregate_orders(date_range):
             'days_between_order_and_payment': days_between_order_and_payment,
             'suppliers_count': suppliers_count,
             'ordered_products_count': ordered_products_count,
-            'gross_margin': gross_margin,
             'average_order_value': average_order_value,
         }
 
