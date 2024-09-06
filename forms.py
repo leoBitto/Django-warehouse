@@ -142,9 +142,10 @@ class TransactionForm(forms.ModelForm):
 class SaleForm(TransactionForm):
     class Meta(TransactionForm.Meta):
         model = Sale
-        fields =  ['customer'] + TransactionForm.Meta.fields + ['invoice', 'delivery_note']
+        fields =  ['sale_invoice_number', 'customer'] + TransactionForm.Meta.fields + ['invoice', 'delivery_note']
         widgets = {
             **TransactionForm.Meta.widgets,
+            'sale_invoice_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Es. 2024-001'}),
             'customer': forms.Select(attrs={'class': 'form-control'}),
             'invoice': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
             'delivery_note': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),
@@ -165,9 +166,10 @@ class SaleForm(TransactionForm):
 class OrderForm(TransactionForm):
     class Meta(TransactionForm.Meta):
         model = Order
-        fields = ['supplier', 'supplier_product_code'] + TransactionForm.Meta.fields + ['invoice', 'delivery_note']
+        fields = ['order_invoice_number', 'supplier', 'supplier_product_code'] + TransactionForm.Meta.fields + ['invoice', 'delivery_note']
         widgets = {
             **TransactionForm.Meta.widgets,
+            'order_invoice_number': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Es. 2024-001'}),
             'supplier': forms.Select(attrs={'class': 'form-control'}),
             'supplier_product_code': forms.TextInput(attrs={'class': 'form-control'}),
             'invoice': forms.ClearableFileInput(attrs={'class': 'form-control-file'}),

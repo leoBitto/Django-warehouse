@@ -41,6 +41,7 @@
         <table id="orderTable" class="table table-bordered w-100">
             <thead class="table-dark">
                 <tr>
+                    <th style="width: 10%;">Fattura</th>
                     <th>Fornitore</th>
                     <th style="width: 35%;">Prodotto</th>
                     <th>Quantità</th>
@@ -52,11 +53,12 @@
             <tbody>
                 {% for order in orders %}
                     <tr class="order-item">
+                        <td><a class="link-secondary" href="{% url 'inventory:invoice_detail' invoice_type='order' invoice_number=order.order_invoice_number %}">{{ order.order_invoice_number }}</a></td>
                         <td>{{ order.supplier }}</td>
                         <td>{{ order.product.name }}</td>
                         <td>{{ order.quantity }}</td>
                         <td>€{{ order.unit_price|floatformat:2 }}</td>
-                        <td>{{ order.sale_date|date:"d/m/Y" }}</td> <!-- Formato data italiano -->
+                        <td>{{ order.sale_date|date:"d/m/Y" }}</td> 
                         <td>
                             <div class="btn-group" role="group">
                                 <a href="{% url 'inventory:order_detail' order.id %}" class="btn btn-sm btn-outline-dark">

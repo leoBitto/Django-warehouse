@@ -29,7 +29,7 @@ def calculate_inventory_aggregates():
     }
 
 
-def aggregate_inventory_quarter():
+def aggregate_inventory_quarterly():
     try:
         today = timezone.now().date()
         quarter = (today.month - 1) // 3 + 1
@@ -48,7 +48,7 @@ def aggregate_inventory_quarter():
     except Exception as e:
         logger.error(f'Errore durante l\'aggregazione trimestrale dell\'inventario: {e}', exc_info=True)
 
-def aggregate_inventory_annual():
+def aggregate_inventory_annually():
     try:
         today = timezone.now().date()
 

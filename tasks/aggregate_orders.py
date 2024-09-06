@@ -7,6 +7,7 @@ from inventory.models.aggregated import (
     OrdersQuarterlyAggregation, OrdersAnnualAggregation
 )
 from .utils import *
+from backoffice.utils import *
 
 logger = logging.getLogger('tasks')
 

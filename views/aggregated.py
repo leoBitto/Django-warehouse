@@ -57,10 +57,8 @@ class GlobalReportView(LoginRequiredMixin, View):
             previous_periods_data = get_previous_periods(
                 aggregation_model, selected_period, period_type, num_previous_periods=6
             )
-            for data in previous_periods_data:
-                logger.info(f"{data}")
 
-            return render(request, 'inventory/reports/rglobal_eport.html', {
+            return render(request, 'inventory/reports/global_report.html', {
                 'data': previous_periods_data,
                 'report_type': 'Global',
                 'period_type': period_type,
@@ -137,7 +135,6 @@ class ProductReportView(LoginRequiredMixin, View):
         return render(request, self.template_name, context)
 
 
-
 class SalesReportView(LoginRequiredMixin, View):
     template_name = 'backoffice/reports/select_aggregation.html'
 
@@ -202,6 +199,10 @@ class SalesReportView(LoginRequiredMixin, View):
             previous_periods_data = get_previous_periods(
                 aggregation_model, selected_period, period_type, num_previous_periods=6
             )
+            for data in previous_periods_data:
+                logger.info(f"{data}")
+
+
             return render(request, 'inventory/reports/sales_report.html', {
                 'data': previous_periods_data,
                 'report_type': 'Sales',

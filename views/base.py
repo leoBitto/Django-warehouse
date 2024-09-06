@@ -2,13 +2,16 @@
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
+from django.views.generic import DetailView
 from django.contrib.auth.mixins import LoginRequiredMixin
 from ..models.base import ProductCategory, Product, Sale, Order, ProductImage
 from ..forms import ProductCategoryForm, ProductForm, SaleForm, OrderForm, ProductImageForm
 from django.contrib import messages
 import csv
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404
 from datetime import datetime
+from crm.models.base import *  
+
 
 # inventory/views.py
 
@@ -213,6 +216,45 @@ class ProductDetailView(LoginRequiredMixin, View):
         })
 
 
+class InvoiceDetailView(View):
+    template_name = 'inventory/invoice_detail.html'
+
+    def get(self, request, *args, **kwargs):
+        invoice_number = self.kwargs['invoice_number']
+        invoice_type = self.kwargs['invoice_type']
+
+        if invoice_type == 'order':
+            objects = Order.objects.filter(order_invoice_number=invoice_number)
+            if not objects.exists():
+                raise Http404("Fattura ordine non trovata")
+            context = self.get_order_context(objects)
+        elif invoice_type == 'sale':
+            objects = Sale.objects.filter(sale_invoice_number=invoice_number)
+            if not objects.exists():
+                raise Http404("Fattura vendita non trovata")
+            context = self.get_sale_context(objects)
+        else:
+            raise Http404("Tipo di fattura non valido")
+
+        return render(request, self.template_name, context)
+
+    def get_order_context(self, orders):
+        context = {
+            'orders': orders,
+            'supplier': get_object_or_404(Supplier, id=orders.first().supplier_id),
+            'total_value': sum(order.unit_price * order.quantity for order in orders),
+            'invoice_type': 'order',
+        }
+        return context
+
+    def get_sale_context(self, sales):
+        context = {
+            'sales': sales,
+            'customer': get_object_or_404(Customer, id=sales.first().customer_id),
+            'total_value': sum(sale.unit_price * sale.quantity for sale in sales),
+            'invoice_type': 'sale',
+        }
+        return context
 
 class DownloadStockDataCSV(LoginRequiredMixin, View):
 

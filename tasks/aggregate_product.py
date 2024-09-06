@@ -4,6 +4,7 @@ from django.db import transaction
 from inventory.models.base import Product, Order, Sale
 from inventory.models.aggregated import ProductAnnualAggregation, ProductQuarterlyAggregation, ProductMonthlyAggregation
 import logging
+from backoffice.utils import *
 
 logger = logging.getLogger('tasks')
 
@@ -22,7 +23,7 @@ def calculate_aggregations(product, start_date, end_date):
         'customers_count': customers_count,
     }
 
-def aggregate_product_quarter():
+def aggregate_product_quarterly():
     today = timezone.now().date()
     quarter = (today.month - 1) // 3 + 1
     start_of_quarter = today.replace(month=(quarter - 1) * 3 + 1, day=1)
@@ -49,7 +50,7 @@ def aggregate_product_quarter():
         logger.error(f'Errore durante l\'aggregazione trimestrale del prodotto {product}: {e}', exc_info=True)
 
 
-def aggregate_product_year():
+def aggregate_product_annually():
     today = timezone.now().date()
     start_of_year = today.replace(month=1, day=1)
     end_of_year = today.replace(month=12, day=31)
@@ -74,28 +75,24 @@ def aggregate_product_year():
         logger.error(f'Errore durante l\'aggregazione annuale del prodotto {product}: {e}', exc_info=True)
 
 
-def aggregate_product_month():
-    today = timezone.now().date()
-    start_of_month = today.replace(day=1)
-    end_of_month = (start_of_month + timezone.timedelta(days=31)).replace(day=1) - timezone.timedelta(days=1)
+def aggregate_product_monthly():
+    today = get_today()
+    date_params, date_range = get_month_params(today)
     
     try:
-        today = timezone.now().date()
-        
         for product in Product.objects.all():
-            defaults = calculate_aggregations(product, start_of_month, end_of_month)
-            #logger.info(f'Defaults for product {product.id}: {defaults}')
+            defaults = calculate_aggregations(product, date_range[0], date_range[1])
 
             with transaction.atomic():
                 _, created = ProductMonthlyAggregation.objects.using('gold').update_or_create(
-                    year=today.year,
-                    month=today.month,
+                    year=date_params['year'],
+                    month=date_params['month'],
                     product_name=product.name,
                     product_internal_code=product.internal_code,
                     defaults=defaults
                 )
 
-            logger.info(f'Aggregazione mensile per prodotto {product} completata per il mese {today.month} anno {today.year}')
+            logger.info(f'Aggregazione mensile per prodotto {product} completata per il mese {date_params["month"]} anno {date_params["year"]}')
 
     except Exception as e:
         logger.error(f'Errore durante l\'aggregazione mensile del prodotto {product}: {e}', exc_info=True)

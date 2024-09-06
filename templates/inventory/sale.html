@@ -41,6 +41,7 @@
         <table id="saleTable" class="table table-bordered w-100">
             <thead class="table-dark">
                 <tr>
+                    <th style="width: 10%;">Fattura</th>
                     <th>Cliente</th>
                     <th style="width: 35%;">Prodotto</th>
                     <th>Quantità</th>
@@ -52,6 +53,7 @@
             <tbody>
                 {% for sale in sales %}
                     <tr class="sale-item">
+                        <td><a class="link-secondary" href="{% url 'inventory:invoice_detail' invoice_type='sale' invoice_number=sale.sale_invoice_number %}">{{ sale.sale_invoice_number }}</a></td>
                         <td>{{ sale.customer }}</td>
                         <td>{{ sale.product.name }}</td>
                         <td>{{ sale.quantity }}</td>

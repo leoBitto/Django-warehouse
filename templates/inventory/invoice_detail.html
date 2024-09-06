@@ -1,0 +1,102 @@
+{% extends "backoffice/backoffice_base.html" %}
+{% load static %}
+
+{% block dashboard_app %}
+
+<h1>Dettagli Fattura</h1>
+
+<div class="container mt-4">
+    {% if invoice_type == 'order' %}
+        <div class="d-flex flex-row justify-content-between mb-4">
+            <div>
+                <h3>Ordine da {{ supplier.name }}</h3>
+            </div>
+            <div>
+                <h4>Per l'azienda {{ supplier.company }}</h4>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="d-flex flex-row justify-content-between">
+                    <p><strong>Fattura numero:</strong> {{ orders.first.order_invoice_number }}</p>
+                    <p><strong>Totale valore:</strong> {{ total_value }} €</p>
+                </div>
+            </div>
+        </div>
+    {% elif invoice_type == 'sale' %}
+        <div class="d-flex flex-row justify-content-between mb-4">
+            <div>
+                <h3>Vendita a {{ customer.name }}</h3>
+            </div>
+            <div>
+                <h4>Per l'azienda {{ customer.company }}</h4>
+            </div>
+        </div>
+        <div class="card mb-4">
+            <div class="card-body">
+                <p><strong>Fattura numero:</strong> {{ sales.first.sale_invoice_number }}</p>
+                <p><strong>Totale valore:</strong> {{ total_value }} €</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+
+
+<table class="table table-bordered w-100">
+    <thead class="table-dark">
+        <tr>
+            <th>Prodotto</th>
+            {% if invoice_type == 'order' %}
+            <th>Codice Prodotto Fornitore</th>
+            {% endif %}
+            <th>Quantità</th>
+            <th>Prezzo Unitario</th>
+            <th>Totale</th>
+
+            <th>Data vendita</th>
+            <th>Data consegna</th>
+            <th>Data pagamento</th>
+
+            <th>Stato</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% if invoice_type == 'sale' %}
+            {% for item in sales %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.unit_price|floatformat:2 }} €</td>
+                <td>{{ item.total_price|floatformat:2 }} €</td>
+
+                <td>{{ item.sale_date|date:"d/m/Y" }}</td>
+                <td>{{ item.delivery_date|date:"d/m/Y" }}</td>
+                <td>{{ item.payment_date|date:"d/m/Y" }}</td>
+
+                <td>{{ item.status }}</td>
+            </tr>
+            {% endfor %}
+        {% elif invoice_type == 'order' %}
+            {% for item in orders %}
+            <tr>
+                <td>{{ item.product.name }}</td>
+                <td>{{ item.supplier_product_code }}</td>
+                <td>{{ item.quantity }}</td>
+                <td>{{ item.unit_price|floatformat:2 }} €</td>
+                <td>{{ item.total_price|floatformat:2 }} €</td>
+
+                <td>{{ item.sale_date|date:"d/m/Y" }}</td>
+                <td>{{ item.delivery_date|date:"d/m/Y" }}</td>
+                <td>{{ item.payment_date|date:"d/m/Y" }}</td>
+
+                <td>{{ item.status }}</td>
+            </tr>
+            {% endfor %}
+        {% else %}
+
+        <p>Qualcosa è andato storto nel recupero delle informazioni.</p>
+        {% endif %}
+    </tbody>
+</table>
+{% endblock dashboard_app%}

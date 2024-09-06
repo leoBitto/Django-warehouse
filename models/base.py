@@ -164,7 +164,13 @@ class Sale(Transaction):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, null=True, blank=True, related_name='sales', verbose_name=_("cliente"))
     invoice = models.FileField(_("Fattura"), upload_to='invoices/sales/', blank=True)
     delivery_note = models.FileField(_("Bolla di accompagnamento"), upload_to='delivery_notes/sales/', blank=True)
-
+    sale_invoice_number = models.CharField(
+        _("Numero Fattura Vendita"),
+        max_length=30,
+        blank=True,
+        null=True,
+        help_text="Numero della fattura di vendita (es. 2024-001)"
+    )
 
     class Meta:
         verbose_name = _("vendita")
@@ -191,6 +197,13 @@ class Order(Transaction):
     supplier_product_code = models.CharField(_("Codice Interno del Fornitore"),max_length=30, blank=True, null=True)
     invoice = models.FileField(_("Fattura"), upload_to='invoices/orders/', blank=True)
     delivery_note = models.FileField(_("Bolla di accompagnamento"), upload_to='delivery_notes/orders/', blank=True)
+    order_invoice_number = models.CharField(
+        _("Numero Fattura Ordine"),
+        max_length=30,
+        blank=True,
+        null=True,
+        help_text="Numero della fattura di ordine (es. 2024-001)"
+    )
 
     class Meta:
         verbose_name = _("ordine")

@@ -6,6 +6,7 @@ from inventory.models.aggregated import (
     SalesDailyAggregation, SalesWeeklyAggregation, SalesMonthlyAggregation, 
     SalesQuarterlyAggregation, SalesAnnualAggregation
 )
+from backoffice.utils import *
 from .utils import *
 
 logger = logging.getLogger('tasks')
@@ -100,7 +101,6 @@ def aggregate_sales_weekly():
 
     logger.info(f'Aggregazione settimanale delle vendite completata per la settimana {date_params["week"]}, {date_params["year"]}.')
 
-
 def aggregate_sales_monthly():
     today = get_today()
     date_params, date_range = get_month_params(today)
@@ -114,8 +114,6 @@ def aggregate_sales_monthly():
 
     logger.info(f'Aggregazione mensile delle vendite completata per il mese {date_params["month"]}, {date_params["year"]}.')
 
-
-
 def aggregate_sales_quarterly():
     today = get_today()
     date_params, date_range = get_quarter_params(today)
@@ -128,8 +126,6 @@ def aggregate_sales_quarterly():
         )
 
     logger.info(f'Aggregazione trimestrale delle vendite completata per il trimestre {date_params["quarter"]}, {date_params["year"]}.')
-
-
 
 def aggregate_sales_annually():
     today = get_today()
