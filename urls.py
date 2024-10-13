@@ -4,7 +4,7 @@ from django.urls import path
 from .views.base import *
 from .views.aggregated import *
 
-app_name = 'inventory'
+app_name = 'warehouse'
 
 urlpatterns = [
     path('categories/', ProductCategoryView.as_view(), name='product_category_view'),
