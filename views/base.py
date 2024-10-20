@@ -256,6 +256,7 @@ class InvoiceDetailView(View):
         }
         return context
 
+
 class DownloadStockDataCSV(LoginRequiredMixin, View):
 
     def get(self, request, *args, **kwargs):
