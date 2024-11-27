@@ -1,10 +1,10 @@
-# inventory/views/aggregated.py
+# Warehouse/views/aggregated.py
 from django.shortcuts import render
 from datetime import datetime, timedelta
 from django.views import View
 from django.contrib.auth.mixins import LoginRequiredMixin
-from inventory.models.aggregated import (
-    InventoryGlobalAnnualAggregation, InventoryGlobalQuarterlyAggregation,
+from warehouse.models.aggregated import (
+    WarehouseGlobalAnnualAggregation, WarehouseGlobalQuarterlyAggregation,
     ProductAnnualAggregation, ProductQuarterlyAggregation, ProductMonthlyAggregation,
     DataQualityQuarterlyAggregation, DataQualityAnnualAggregation,
     SalesDailyAggregation, SalesWeeklyAggregation, SalesMonthlyAggregation,
@@ -39,7 +39,7 @@ class GlobalReportView(LoginRequiredMixin, View):
         if 'quarterly_submit' in request.POST:
             form = QuarterlyAggregationForm(request.POST)
             if form.is_valid():
-                aggregation_model = InventoryGlobalQuarterlyAggregation
+                aggregation_model = WarehouseGlobalQuarterlyAggregation
                 period_type = 'quarter'
                 selected_period = {
                     'quarter': form.cleaned_data['quarter'],
@@ -48,7 +48,7 @@ class GlobalReportView(LoginRequiredMixin, View):
         elif 'yearly_submit' in request.POST:
             form = YearlyAggregationForm(request.POST)
             if form.is_valid():
-                aggregation_model = InventoryGlobalAnnualAggregation
+                aggregation_model = WarehouseGlobalAnnualAggregation
                 period_type = 'year'
                 selected_period = {'year': form.cleaned_data['year']}
 
@@ -58,7 +58,7 @@ class GlobalReportView(LoginRequiredMixin, View):
                 aggregation_model, selected_period, period_type, num_previous_periods=6
             )
 
-            return render(request, 'inventory/reports/global_report.html', {
+            return render(request, 'warehouse/reports/global_report.html', {
                 'data': previous_periods_data,
                 'report_type': 'Global',
                 'period_type': period_type,
@@ -120,7 +120,7 @@ class ProductReportView(LoginRequiredMixin, View):
             previous_periods_data = get_previous_periods(
                 aggregation_model, selected_period, period_type, num_previous_periods=6
             )
-            return render(request, 'inventory/reports/product_report.html', {
+            return render(request, 'warehouse/reports/product_report.html', {
                 'data': previous_periods_data,
                 'report_type': 'Product',
                 'period_type': period_type,
@@ -203,7 +203,7 @@ class SalesReportView(LoginRequiredMixin, View):
                 logger.info(f"{data}")
 
 
-            return render(request, 'inventory/reports/sales_report.html', {
+            return render(request, 'warehouse/reports/sales_report.html', {
                 'data': previous_periods_data,
                 'report_type': 'Sales',
                 'period_type': period_type,
@@ -286,7 +286,7 @@ class OrdersReportView(LoginRequiredMixin, View):
             )
             #logger.info(f"data: {previous_periods_data}")
 
-            return render(request, 'inventory/reports/orders_report.html', {
+            return render(request, 'warehouse/reports/orders_report.html', {
                 'data': previous_periods_data,
                 'report_type': 'Orders',
                 'period_type': period_type,
@@ -342,7 +342,7 @@ class DataQualityReportView(LoginRequiredMixin, View):
                 aggregation_model, selected_period, period_type, num_previous_periods=6
             )
 
-            return render(request, 'inventory/reports/quality_report.html', {
+            return render(request, 'warehouse/reports/quality_report.html', {
                 'data': previous_periods_data,
                 'report_type': 'Data Quality',
                 'period_type': period_type,

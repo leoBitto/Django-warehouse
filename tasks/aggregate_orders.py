@@ -1,8 +1,8 @@
 import logging
 from django.db import transaction
 from django.db.models import Avg, Count, Sum, F, ExpressionWrapper, DecimalField
-from inventory.models.base import Order
-from inventory.models.aggregated import (
+from warehouse.models.base import Order
+from warehouse.models.aggregated import (
     OrdersDailyAggregation, OrdersWeeklyAggregation, OrdersMonthlyAggregation, 
     OrdersQuarterlyAggregation, OrdersAnnualAggregation
 )

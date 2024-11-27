@@ -1,6 +1,6 @@
 from django.db import models
 from django.utils.translation import gettext_lazy as _
-from inventory.models.base import *
+from warehouse.models.base import *
 from gold_bi.models import (
     DailyAggregationBase,
     WeeklyAggregationBase,
@@ -9,19 +9,19 @@ from gold_bi.models import (
     YearlyAggregationBase
 )
 
-class InventoryGlobalAggregationMixin(models.Model):
+class WarehouseGlobalAggregationMixin(models.Model):
     distinct_products_count = models.IntegerField(null=True, blank=True, verbose_name=_("Conteggio Prodotti Distinti"))
     total_products_count = models.IntegerField(null=True, blank=True, verbose_name=_("Conteggio Totale Prodotti"))
-    total_inventory_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name=_("Valore Totale Inventario"))
+    total_warehouse_value = models.DecimalField(max_digits=15, decimal_places=2, null=True, blank=True, verbose_name=_("Valore Totale Inventario"))
 
     class Meta:
         abstract = True
 
-class InventoryGlobalAnnualAggregation(InventoryGlobalAggregationMixin, YearlyAggregationBase):
+class WarehouseGlobalAnnualAggregation(WarehouseGlobalAggregationMixin, YearlyAggregationBase):
     def __str__(self):
         return f"Anno: {self.year}"
 
-class InventoryGlobalQuarterlyAggregation(InventoryGlobalAggregationMixin, QuarterlyAggregationBase):
+class WarehouseGlobalQuarterlyAggregation(WarehouseGlobalAggregationMixin, QuarterlyAggregationBase):
     def __str__(self):
         return f"Anno: {self.year}, Trimestre: {self.quarter}"
 
