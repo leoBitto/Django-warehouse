@@ -2,7 +2,7 @@
 
 from django.urls import path
 from .views.base import *
-from .views.aggregated import *
+
 
 app_name = 'warehouse'
 
