@@ -1,0 +1,28 @@
+    <!-- Warehouse -->
+    <div class="col-12 col-md-4 mb-3">
+        <div class="card p-3">
+            <div class="card-body text-center pt-3 shadow-sm">
+                <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+                    <i class="fas fa-box-open fa-2x"></i>
+                    <h5 class="card-title mb-0">Magazzino</h5>
+                </div>
+                <div class="accordion" id="warehouseAccordion">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingWarehouse">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseWarehouse" aria-expanded="false" aria-controls="collapseWarehouse">
+                                Gestisci Magazzino
+                            </button>
+                        </h2>
+                        <div id="collapseWarehouse" class="accordion-collapse collapse" aria-labelledby="headingWarehouse" data-bs-parent="#warehouseAccordion">
+                            <div class="accordion-body">
+                                <ul class="list-unstyled">
+                                    <li><a href="{% url 'warehouse:product_list' %}" class="btn btn-outline-dark my-1 w-100 text-start"><i class="fas fa-cubes me-2"></i> Prodotti</a></li>
+                                    <li><a href="{% url 'warehouse:category_list' %}" class="btn btn-outline-dark my-1 w-100 text-start"><i class="fas fa-tags me-2"></i> Categorie</a></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>

@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
-from warehouse.models import Product, ProductCategory, ProductSupplierCode
+from warehouse.models.base import Product, ProductCategory, ProductSupplierCode
 from warehouse.forms import ProductForm, ProductCategoryForm, ProductSupplierCodeForm
 
 class ProductListView(View):
