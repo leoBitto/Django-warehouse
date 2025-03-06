@@ -1,0 +1,51 @@
+{% extends "backoffice/backoffice.html" %}
+
+{% block main %}
+<div class="container mx-auto p-4">
+    <h1 class="text-xl font-semibold mb-4">{{ category.name }}</h1>
+    
+    <div class="bg-white p-4 shadow rounded-lg">
+        <p><strong>Descrizione:</strong> {{ category.description|default:"Nessuna descrizione disponibile" }}</p>
+        <p><strong>Categoria padre:</strong> {{ category.parent.name|default:"Nessuna" }}</p>
+    </div>
+    
+    <h2 class="text-lg font-semibold mt-6">Prodotti in questa categoria</h2>
+    <div class="overflow-x-auto mt-2">
+        <table class="min-w-full bg-white border border-gray-200">
+            <thead>
+                <tr class="bg-gray-100">
+                    <th class="py-2 px-4 border">Nome</th>
+                    <th class="py-2 px-4 border hidden md:table-cell">Codice Interno</th>
+                    <th class="py-2 px-4 border hidden md:table-cell">Quantità in Stock</th>
+                    <th class="py-2 px-4 border">Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                <tr class="border-t">
+                    <td class="py-2 px-4">{{ product.name }}</td>
+                    <td class="py-2 px-4 hidden md:table-cell">{{ product.internal_code }}</td>
+                    <td class="py-2 px-4 hidden md:table-cell">{{ product.stock_quantity }}</td>
+                    <td class="py-2 px-4">
+                        <a href="{% url 'warehouse:product_detail' product.id %}" class="text-blue-500">Dettagli</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td class="py-2 px-4 border text-center" colspan="4">Nessun prodotto in questa categoria.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="mt-6">
+        <a href="{% url 'warehouse:category_edit' category.id %}" class="bg-yellow-500 text-white px-4 py-2 rounded">Modifica</a>
+        <form method="post" class="inline" onsubmit="return confirm('Sei sicuro di voler eliminare questa categoria?');">
+            {% csrf_token %}
+            <input type="hidden" name="delete_object" value="{{ category.id }}">
+            <button type="submit" class="text-red-500 ml-2">Elimina</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

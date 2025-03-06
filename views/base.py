@@ -2,9 +2,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from warehouse.models.base import Product, ProductCategory, ProductSupplierCode
 from warehouse.forms import ProductForm, ProductCategoryForm, ProductSupplierCodeForm
+from billing.models.base import InvoiceLine, Invoice
+
+
 
 class ProductListView(View):
-    template_name = 'warehouse/products.html'
+    template_name = 'warehouse/product_list.html'
 
     def get(self, request, *args, **kwargs):
         products = Product.objects.all()
@@ -32,12 +35,27 @@ class ProductDetailView(View):
         product = get_object_or_404(Product, id=product_id)
         form = ProductForm(instance=product)
         supplier_code_form = ProductSupplierCodeForm()
+        image_form = ProductImageForm()
+
         supplier_codes = ProductSupplierCode.objects.filter(product=product)
+        product_images = ProductImage.objects.filter(product=product)
+
+        # Ottieni tutte le InvoiceLine per il prodotto
+        invoice_lines = InvoiceLine.objects.filter(product=product)
+
+        # Dividi in acquisti e vendite
+        purchases = [line for line in invoice_lines if line.invoice.invoice_type == 'IN']
+        sales = [line for line in invoice_lines if line.invoice.invoice_type == 'OUT']
+
         return render(request, self.template_name, {
-            'product': product, 
-            'form': form, 
-            'supplier_code_form': supplier_code_form, 
-            'supplier_codes': supplier_codes
+            'product': product,
+            'form': form,
+            'supplier_code_form': supplier_code_form,
+            'image_form': image_form,
+            'supplier_codes': supplier_codes,
+            'product_images': product_images,
+            'purchases': purchases,
+            'sales': sales,
         })
 
     def post(self, request, product_id, *args, **kwargs):
@@ -61,17 +79,39 @@ class ProductDetailView(View):
                 supplier_code.save()
                 return redirect('warehouse:product_detail', product_id=product.id)
 
+        elif 'add_image' in request.POST:
+            image_form = ProductImageForm(request.POST, request.FILES)
+            if image_form.is_valid():
+                image = image_form.save(commit=False)
+                image.product = product
+                image.save()
+                return redirect('warehouse:product_detail', product_id=product.id)
+
+        elif 'delete_image' in request.POST:
+            image_id = request.POST.get('image_id')
+            if image_id:
+                image = get_object_or_404(ProductImage, id=image_id, product=product)
+                image.delete()
+                return redirect('warehouse:product_detail', product_id=product.id)
+
+        form = ProductForm(instance=product)
         supplier_code_form = ProductSupplierCodeForm()
+        image_form = ProductImageForm()
         supplier_codes = ProductSupplierCode.objects.filter(product=product)
+        product_images = ProductImage.objects.filter(product=product)
+
         return render(request, self.template_name, {
-            'product': product, 
-            'form': form, 
-            'supplier_code_form': supplier_code_form, 
-            'supplier_codes': supplier_codes
+            'product': product,
+            'form': form,
+            'supplier_code_form': supplier_code_form,
+            'image_form': image_form,
+            'supplier_codes': supplier_codes,
+            'product_images': product_images,
         })
 
+
 class CategoryListView(View):
-    template_name = 'warehouse/categories.html'
+    template_name = 'warehouse/category_list.html'
 
     def get(self, request, *args, **kwargs):
         categories = ProductCategory.objects.all()
@@ -97,8 +137,13 @@ class CategoryDetailView(View):
 
     def get(self, request, category_id, *args, **kwargs):
         category = get_object_or_404(ProductCategory, id=category_id)
+        products = category.products.all()  # Recuperiamo i prodotti associati
         form = ProductCategoryForm(instance=category)
-        return render(request, self.template_name, {'category': category, 'form': form})
+        return render(request, self.template_name, {
+            'category': category,
+            'products': products,
+            'form': form
+        })
 
     def post(self, request, category_id, *args, **kwargs):
         category = get_object_or_404(ProductCategory, id=category_id)
@@ -113,4 +158,9 @@ class CategoryDetailView(View):
             category.delete()
             return redirect('warehouse:category_list')
 
-        return render(request, self.template_name, {'category': category, 'form': form})
+        products = category.products.all()  # Assicuriamoci di includere sempre i prodotti
+        return render(request, self.template_name, {
+            'category': category,
+            'products': products,
+            'form': form
+        })
