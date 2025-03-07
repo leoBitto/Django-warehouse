@@ -55,7 +55,7 @@
                         <td>{{ category.name }}</td>
                         <td class="d-none d-md-table-cell">{{ category.description }}</td>
                         <td>
-                            <a href="{% url 'crm:category_detail' category.id %}" class="btn btn-outline-dark btn-sm">
+                            <a href="{% url 'warehouse:category_detail' category.id %}" class="btn btn-outline-dark btn-sm">
                                 <i class="fas fa-info-circle"></i>
                             </a>
                             <button type="submit" name="delete_object" class="btn btn-sm btn-outline-danger" onclick="return confirm('Sei sicuro di voler eliminare?');">

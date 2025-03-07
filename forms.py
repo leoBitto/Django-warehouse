@@ -44,7 +44,7 @@ class ProductSupplierCodeForm(forms.ModelForm):
             'product': forms.Select(attrs={'class': 'form-select'}),
             'supplier': forms.Select(attrs={'class': 'form-select'}),
             'external_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Codice fornitore'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Descrizione fornitore'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Descrizione del codice fornitore'}),
         }
 
 class ProductImageForm(forms.ModelForm):
