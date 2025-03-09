@@ -54,13 +54,11 @@ class Product(models.Model):
     )
 
     # Gestione magazzino
-    stock_quantity = models.DecimalField(
+    stock_quantity = models.IntegerField(
         _("quantità in stock"),
-        max_digits=10,
-        decimal_places=2,
-        default=Decimal('0.00')
+        default=0
     )
-
+    
     # Dettagli prodotto
     description = models.TextField(_("descrizione"), blank=True)
     notes = models.TextField(_("note interne"), blank=True)
@@ -145,44 +143,47 @@ class Product(models.Model):
             for code in self.supplier_codes.all()
         }
 
-class ProductSupplierCode(models.Model):
+class ProductAlias(models.Model):
     """
-    Mappatura tra codici prodotto dei fornitori e prodotti interni.
-    Ogni prodotto può avere più codici, uno per fornitore.
+    Mappatura tra prodotti interni e i nomi alternativi usati dai fornitori.
+    Ogni prodotto può avere più alias, uno per fornitore.
     """
     product = models.ForeignKey(
         Product,
         on_delete=models.CASCADE,
-        related_name='supplier_codes',
+        related_name='aliases',
         verbose_name=_("prodotto")
     )
     supplier = models.ForeignKey(
         'crm.Company',
         on_delete=models.CASCADE,
-        related_name='product_codes',
+        related_name='product_aliases',
         verbose_name=_("fornitore")
+    )
+    alias_name = models.CharField(
+        _("nome alternativo"),
+        max_length=255
     )
     external_code = models.CharField(
         _("codice fornitore"),
         max_length=50,
-        help_text=_("Codice utilizzato dal fornitore per questo prodotto")
+        blank=True
     )
     description = models.TextField(
         _("descrizione fornitore"),
-        blank=True,
-        help_text=_("Descrizione del prodotto utilizzata dal fornitore")
+        blank=True
     )
 
     class Meta:
-        verbose_name = _("codice fornitore")
-        verbose_name_plural = _("codici fornitori")
-        unique_together = ['supplier', 'external_code']  # Un codice deve essere univoco per fornitore
+        verbose_name = _("alias prodotto")
+        verbose_name_plural = _("alias prodotti")
+        unique_together = ['supplier', 'alias_name']  # Un nome deve essere univoco per fornitore
         indexes = [
-            models.Index(fields=['supplier', 'external_code']),
+            models.Index(fields=['supplier', 'alias_name']),
         ]
 
     def __str__(self):
-        return f"{self.supplier.name}: {self.external_code}"
+        return f"{self.supplier.name}: {self.alias_name}"
 
 class ProductImage(models.Model):
     """Immagini associate ai prodotti"""

@@ -77,6 +77,7 @@
                         <tr>
                             <th>Fornitore</th>
                             <th>Codice Esterno</th>
+                            <th>Alias</th>
                             <th>Azioni</th>
                         </tr>
                     </thead>
@@ -85,6 +86,7 @@
                             <tr>
                                 <td>{{ code.supplier.name }}</td>
                                 <td>{{ code.external_code }}</td>
+                                <td>{{ code.alias_name }}</td>
                                 <td>
                                     <form method="post" class="d-inline" onsubmit="return confirm('Sei sicuro di voler eliminare questo codice?');">
                                         {% csrf_token %}

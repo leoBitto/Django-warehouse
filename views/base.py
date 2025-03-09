@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
-from warehouse.models.base import Product, ProductCategory, ProductSupplierCode, ProductImage
-from warehouse.forms import ProductForm, ProductCategoryForm, ProductSupplierCodeForm, ProductImageForm
+from warehouse.models.base import *
+from warehouse.forms import *
 from billing.models.base import InvoiceLine, Invoice
 from django.contrib import messages
 from django import forms
@@ -36,12 +36,12 @@ class ProductDetailView(View):
         form = ProductForm(instance=product)
         
         # Inizializza il form con il prodotto preselezionato e nasconde il campo
-        supplier_code_form = ProductSupplierCodeForm(initial={'product': product})
+        supplier_code_form = ProductAliasForm(initial={'product': product})
         supplier_code_form.fields['product'].widget = forms.HiddenInput()
         
         image_form = ProductImageForm()
 
-        supplier_codes = ProductSupplierCode.objects.filter(product=product)
+        supplier_codes = ProductAlias.objects.filter(product=product)
         product_images = ProductImage.objects.filter(product=product)
 
         # Ottieni tutte le InvoiceLine per il prodotto
@@ -83,7 +83,7 @@ class ProductDetailView(View):
                 messages.error(request, f"Errore durante l'eliminazione del prodotto: {str(e)}")
 
         elif 'add_supplier_code' in request.POST:
-            supplier_code_form = ProductSupplierCodeForm(request.POST)
+            supplier_code_form = ProductAliasForm(request.POST)
             if supplier_code_form.is_valid():
                 supplier_code = supplier_code_form.save(commit=False)
                 supplier_code.product = product  # Assicurati che il prodotto sia impostato
@@ -96,7 +96,7 @@ class ProductDetailView(View):
         elif 'delete_supplier_code' in request.POST:
             supplier_code_id = request.POST.get('supplier_code_id')
             if supplier_code_id:
-                supplier_code = get_object_or_404(ProductSupplierCode, id=supplier_code_id, product=product)
+                supplier_code = get_object_or_404(ProductAlias, id=supplier_code_id, product=product)
                 supplier_code.delete()
                 messages.success(request, "Codice fornitore eliminato con successo!")
                 return redirect('warehouse:product_detail', product_id=product.id)
@@ -131,11 +131,11 @@ class ProductDetailView(View):
         form = ProductForm(instance=product)
         
         # Inizializza il form con il prodotto preselezionato e nasconde il campo
-        supplier_code_form = ProductSupplierCodeForm(initial={'product': product})
+        supplier_code_form = ProductAliasForm(initial={'product': product})
         supplier_code_form.fields['product'].widget = forms.HiddenInput()
         
         image_form = ProductImageForm()
-        supplier_codes = ProductSupplierCode.objects.filter(product=product)
+        supplier_codes = ProductAlias.objects.filter(product=product)
         product_images = ProductImage.objects.filter(product=product)
 
         # Ottieni tutte le InvoiceLine per il prodotto

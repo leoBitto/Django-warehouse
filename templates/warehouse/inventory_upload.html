@@ -1,0 +1,17 @@
+{% extends "backoffice/backoffice.html" %}
+{% load static %}
+
+{% block main %}
+<div class="container mt-5">
+    <h2>Carica lo snapshot del magazzino</h2>
+    <form method="post" enctype="multipart/form-data" class="mt-4">
+        {% csrf_token %}
+        <div class="mb-3">
+            <label for="file" class="form-label">Seleziona il file Excel</label>
+            <input type="file" name="file" id="file" class="form-control" accept=".xlsx">
+        </div>
+        <button type="submit" class="btn btn-primary">Carica</button>
+    </form>
+
+</div>
+{% endblock %}

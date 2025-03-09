@@ -1,5 +1,5 @@
 from django import forms
-from .models.base import ProductCategory, Product, ProductSupplierCode, ProductImage
+from .models.base import ProductCategory, Product, ProductAlias, ProductImage
 
 class ProductCategoryForm(forms.ModelForm):
     class Meta:
@@ -31,20 +31,22 @@ class ProductForm(forms.ModelForm):
             'is_visible': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
 
-class ProductSupplierCodeForm(forms.ModelForm):
+class ProductAliasForm(forms.ModelForm):
     class Meta:
-        model = ProductSupplierCode
+        model = ProductAlias
         fields = [
             'product', 
             'supplier', 
+            'alias_name',
             'external_code', 
             'description'
         ]
         widgets = {
             'product': forms.Select(attrs={'class': 'form-select'}),
             'supplier': forms.Select(attrs={'class': 'form-select'}),
+            'alias_name': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Nome Usato dal fornitore'}),
             'external_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Codice fornitore'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Descrizione del codice fornitore'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': '(Opz.) Descrizione del codice fornitore'}),
         }
 
 class ProductImageForm(forms.ModelForm):
@@ -56,3 +58,11 @@ class ProductImageForm(forms.ModelForm):
             'image': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'is_primary': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
         }
+
+
+class InventoryUploadForm(forms.Form):
+    file = forms.FileField(
+        label="Carica file Excel",
+        help_text="Seleziona un file Excel contenente lo snapshot del magazzino.",
+        widget=forms.ClearableFileInput(attrs={"accept": ".xlsx"})
+    )
