@@ -1,83 +1,212 @@
-{% extends "backoffice/backoffice.html" %}
+{% extends "website/base.html" %}
 {% load static %}
 
-{% block main %}
-<div class="container mt-4">
-    <!-- Intestazione -->
-    <div class="d-flex flex-row flex-md-row justify-content-between align-items-center mb-4">
-        <h2 class="h4 text-center text-md-start">
-            <i class="fas fa-boxes me-2"></i>Prodotti
-        </h2>
-        <div class="d-flex flex-row justify-content-between align-items-center mb-4">
-            <button class="btn bg-dark text-white mt-2 mt-md-0" data-bs-toggle="modal" data-bs-target="#createProductModal">
-                <i class="fas fa-plus-circle me-2"></i>
-            </button>
-            <a href="{% url 'backoffice:backoffice' %}" class="btn btn-outline-dark mt-2 mt-md-0">
-                <i class="fa-solid fa-reply me-2"></i>
-            </a>
+{% block content %}
+<section class="hero-section bg-light py-5">
+    <div class="container">
+        <div class="row align-items-center text-center">
+            <div class="col-lg-8 mx-auto">
+                <h1 class="display-4 fw-bold text-primary mb-3">I Nostri Prodotti</h1>
+                <p class="lead mb-4">Selezione di alta qualità per professionisti del settore HORECA</p>
+            </div>
         </div>
     </div>
+</section>
 
-    <!-- Modal per aggiungere un nuovo prodotto -->
-    <div class="modal fade" id="createProductModal" tabindex="-1">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-dark text-white">
-                    <h5 class="modal-title"><i class="fas fa-boxes me-2"></i>Nuovo Prodotto</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<section class="py-5">
+    <div class="container">
+        <div class="row g-4">
+            {% for product in products %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 product-card border-0 shadow-sm hover-effect">
+                    <div class="product-image-container">
+                        {% if product.images.exists %}
+                            <div class="image-gallery">
+                                {% for image in product.images.all %}
+                                    <img src="{{ image.image.url }}" 
+                                         class="gallery-image {% if forloop.first %}active{% endif %}" 
+                                         alt="{{ product.name }}" 
+                                         data-index="{{ forloop.counter0 }}">
+                                {% endfor %}
+                                
+                                {% if product.images.count > 1 %}
+                                <div class="gallery-controls">
+                                    <div class="gallery-dots">
+                                        {% for image in product.images.all %}
+                                            <span class="dot {% if forloop.first %}active{% endif %}" data-index="{{ forloop.counter0 }}"></span>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <div class="no-image-placeholder d-flex align-items-center justify-content-center bg-light" style="height: 220px;">
+                                <i class="fas fa-box fa-3x text-secondary"></i>
+                            </div>
+                        {% endif %}
+                        
+                        {% if product.category %}
+                        <span class="badge bg-primary position-absolute top-0 end-0 m-3">{{ product.category.name }}</span>
+                        {% endif %}
+                    </div>
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">{{ product.name }}</h5>
+                        <p class="card-text text-muted">{{ product.description|truncatewords:15 }}</p>
+                    </div>
+                    <div class="card-footer bg-white border-0">
+                        <span class="availability {% if product.stock_quantity > 0 %}text-success{% else %}text-danger{% endif %}">
+                            {% if product.stock_quantity > 0 %}
+                                <i class="fas fa-check-circle"></i> Disponibile
+                            {% else %}
+                                <i class="fas fa-times-circle"></i> Non disponibile
+                            {% endif %}
+                        </span>
+                    </div>
                 </div>
-                <div class="modal-body">
-                    <form method="post">
-                        {% csrf_token %}
-                        {{ form.as_p }}
-                        <button type="submit" name="create_product" class="btn bg-dark text-white w-100">
-                            <i class="fas fa-check me-2"></i>Crea Prodotto
-                        </button>
-                    </form>
+            </div>
+            {% empty %}
+            <div class="col-12 text-center py-5">
+                <i class="fas fa-box-open fa-4x text-secondary mb-3"></i>
+                <h3>Nessun prodotto disponibile al momento</h3>
+                <p class="text-muted">Controlla più tardi per nuove aggiunte al nostro catalogo.</p>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="bg-light py-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-8 text-center">
+                <h2 class="mb-4 fw-bold">Hai bisogno di assistenza?</h2>
+                <p class="lead mb-4">Il nostro team è pronto ad aiutarti nella scelta dei prodotti più adatti alle tue esigenze.</p>
+                <div class="contact-info">
+                    <a href="tel:+391234567890" class="btn btn-primary btn-lg">
+                        <i class="fas fa-phone-alt me-2"></i> +39 123 456 7890
+                    </a>
                 </div>
             </div>
         </div>
     </div>
+</section>
 
-    <!-- Tabella dei prodotti -->
-    <div class="table-responsive">
-        <table id="productTable" class="table table-striped table-hover">
-            <thead class="table-dark">
-                <tr>
-                    <th>Nome</th>
-                    <th class="d-none d-md-table-cell">Codice Interno</th>
-                    <th class="d-none d-md-table-cell">Categoria</th>
-                    <th class="d-none d-md-table-cell">Stock</th>
-                    <th>Azioni</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for product in products %}
-                    <tr>
-                        <td>{{ product.name }}</td>
-                        <td class="d-none d-md-table-cell">{{ product.internal_code }}</td>
-                        <td class="d-none d-md-table-cell">{{ product.category }}</td>
-                        <td class="d-none d-md-table-cell">{{ product.stock_quantity }}</td>
-                        <td>
-                            <a href="{% url 'warehouse:product_detail' product.id %}" class="btn btn-outline-dark btn-sm">
-                                <i class="fas fa-info-circle"></i>
-                            </a>
-                            <form method="post" class="d-inline" onsubmit="return confirm('Sei sicuro di voler eliminare?');">
-                                {% csrf_token %}
-                                <input type="hidden" name="delete_object" value="{{ product.id }}">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">
-                                    <i class="fas fa-trash-alt"></i>
-                                </button>
-                            </form>
-                        </td>
-                    </tr>
-                {% empty %}
-                    <tr>
-                        <td colspan="5" class="text-center">Nessun prodotto trovato.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-{% endblock %}
+<style>
+    .product-card {
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .hover-effect:hover {
+        transform: translateY(-5px);
+    }
+    
+    .product-image-container {
+        height: 220px;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .image-gallery {
+        position: relative;
+        width: 100%;
+        height: 100%;
+    }
+    
+    .gallery-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        position: absolute;
+        top: 0;
+        left: 0;
+        opacity: 0;
+        transition: opacity 0.5s ease;
+    }
+    
+    .gallery-image.active {
+        opacity: 1;
+        z-index: 1;
+    }
+    
+    .gallery-controls {
+        position: absolute;
+        bottom: 10px;
+        left: 0;
+        right: 0;
+        z-index: 2;
+        display: flex;
+        justify-content: center;
+    }
+    
+    .gallery-dots {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background-color: rgba(255, 255, 255, 0.5);
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+    
+    .dot.active {
+        background-color: white;
+        transform: scale(1.2);
+    }
+    
+    .availability {
+        font-size: 0.9rem;
+        font-weight: 500;
+    }
+    
+    .hero-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize galleries
+    document.querySelectorAll('.image-gallery').forEach(gallery => {
+        const dots = gallery.querySelectorAll('.dot');
+        
+        // Add click event to dots
+        dots.forEach(dot => {
+            dot.addEventListener('click', function() {
+                const index = this.getAttribute('data-index');
+                const images = gallery.querySelectorAll('.gallery-image');
+                
+                // Update active image
+                images.forEach(img => img.classList.remove('active'));
+                images[index].classList.add('active');
+                
+                // Update active dot
+                dots.forEach(d => d.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+        
+        // Auto-rotate images if there are multiple
+        const images = gallery.querySelectorAll('.gallery-image');
+        if (images.length > 1) {
+            let currentIndex = 0;
+            setInterval(() => {
+                currentIndex = (currentIndex + 1) % images.length;
+                
+                // Update active image
+                images.forEach(img => img.classList.remove('active'));
+                images[currentIndex].classList.add('active');
+                
+                // Update active dot
+                dots.forEach(d => d.classList.remove('active'));
+                dots[currentIndex].classList.add('active');
+            }, 3000); // Change image every 3 seconds
+        }
+    });
+});
+</script>
+{% endblock content %}

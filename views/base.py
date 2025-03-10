@@ -7,7 +7,7 @@ from django.contrib import messages
 from django import forms
 
 class ProductListView(View):
-    template_name = 'warehouse/product_list.html'
+    template_name = 'warehouse/backoffice/product_list.html'
 
     def get(self, request, *args, **kwargs):
         products = Product.objects.all()
@@ -29,7 +29,7 @@ class ProductListView(View):
         return render(request, self.template_name, {'products': products, 'form': form})
 
 class ProductDetailView(View):
-    template_name = 'warehouse/product_detail.html'
+    template_name = 'warehouse/backoffice/product_detail.html'
 
     def get(self, request, product_id, *args, **kwargs):
         product = get_object_or_404(Product, id=product_id)
@@ -157,7 +157,7 @@ class ProductDetailView(View):
         })
         
 class ProductImageDetailView(View):
-    template_name = "warehouse/product_image_detail.html"
+    template_name = "warehouse/backoffice/product_image_detail.html"
 
     def get(self, request, image_id, *args, **kwargs):
         image = get_object_or_404(ProductImage, id=image_id)
@@ -173,7 +173,7 @@ class ProductImageDetailView(View):
 
         if "delete_image" in request.POST:
             image.delete()
-            return redirect("product_detail", product_id=image.product.id)
+            return redirect("warehouse:product_detail", product_id=image.product.id)
 
         form = ProductImageForm(request.POST, request.FILES, instance=image)
         if form.is_valid():
@@ -188,7 +188,7 @@ class ProductImageDetailView(View):
 
 
 class CategoryListView(View):
-    template_name = 'warehouse/category_list.html'
+    template_name = 'warehouse/backoffice/category_list.html'
 
     def get(self, request, *args, **kwargs):
         categories = ProductCategory.objects.all()
@@ -210,7 +210,7 @@ class CategoryListView(View):
         return render(request, self.template_name, {'categories': categories, 'form': form})
 
 class CategoryDetailView(View):
-    template_name = 'warehouse/category_detail.html'
+    template_name = 'warehouse/backoffice/category_detail.html'
 
     def get(self, request, category_id, *args, **kwargs):
         category = get_object_or_404(ProductCategory, id=category_id)

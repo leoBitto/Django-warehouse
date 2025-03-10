@@ -1,0 +1,83 @@
+{% extends "backoffice/backoffice.html" %}
+{% load static %}
+
+{% block main %}
+<div class="container mt-4">
+    <!-- Intestazione -->
+    <div class="d-flex flex-row flex-md-row justify-content-between align-items-center mb-4">
+        <h2 class="h4 text-center text-md-start">
+            <i class="fas fa-boxes me-2"></i>Prodotti
+        </h2>
+        <div class="d-flex flex-row justify-content-between align-items-center mb-4">
+            <button class="btn bg-dark text-white mt-2 mt-md-0" data-bs-toggle="modal" data-bs-target="#createProductModal">
+                <i class="fas fa-plus-circle me-2"></i>
+            </button>
+            <a href="{% url 'backoffice:backoffice' %}" class="btn btn-outline-dark mt-2 mt-md-0">
+                <i class="fa-solid fa-reply me-2"></i>
+            </a>
+        </div>
+    </div>
+
+    <!-- Modal per aggiungere un nuovo prodotto -->
+    <div class="modal fade" id="createProductModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-dark text-white">
+                    <h5 class="modal-title"><i class="fas fa-boxes me-2"></i>Nuovo Prodotto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <button type="submit" name="create_product" class="btn bg-dark text-white w-100">
+                            <i class="fas fa-check me-2"></i>Crea Prodotto
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabella dei prodotti -->
+    <div class="table-responsive">
+        <table id="productTable" class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Nome</th>
+                    <th class="d-none d-md-table-cell">Codice Interno</th>
+                    <th class="d-none d-md-table-cell">Categoria</th>
+                    <th class="d-none d-md-table-cell">Stock</th>
+                    <th>Azioni</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for product in products %}
+                    <tr>
+                        <td>{{ product.name }}</td>
+                        <td class="d-none d-md-table-cell">{{ product.internal_code }}</td>
+                        <td class="d-none d-md-table-cell">{{ product.category }}</td>
+                        <td class="d-none d-md-table-cell">{{ product.stock_quantity }}</td>
+                        <td>
+                            <a href="{% url 'warehouse:product_detail' product.id %}" class="btn btn-outline-dark btn-sm">
+                                <i class="fas fa-info-circle"></i>
+                            </a>
+                            <form method="post" class="d-inline" onsubmit="return confirm('Sei sicuro di voler eliminare?');">
+                                {% csrf_token %}
+                                <input type="hidden" name="delete_object" value="{{ product.id }}">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">Nessun prodotto trovato.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
