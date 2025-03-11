@@ -1,6 +1,16 @@
 {% extends "backoffice/backoffice.html" %}
 {% load static %}
 
+{% block head_extra %}
+<!-- DataTables Buttons e dipendenze per esportazione -->
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.2/css/buttons.dataTables.min.css">
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.2/js/buttons.html5.min.js"></script>
+{% endblock %}
+
 {% block main %}
 <div class="container mt-4">
     <!-- Intestazione -->
@@ -45,9 +55,9 @@
             <thead class="table-dark">
                 <tr>
                     <th>Nome</th>
-                    <th class="d-none d-md-table-cell">Codice Interno</th>
-                    <th class="d-none d-md-table-cell">Categoria</th>
-                    <th class="d-none d-md-table-cell">Stock</th>
+                    <th>Codice Interno</th>
+                    <th>Categoria</th>
+                    <th>Stock</th>
                     <th>Azioni</th>
                 </tr>
             </thead>
@@ -55,9 +65,9 @@
                 {% for product in products %}
                     <tr>
                         <td>{{ product.name }}</td>
-                        <td class="d-none d-md-table-cell">{{ product.internal_code }}</td>
-                        <td class="d-none d-md-table-cell">{{ product.category }}</td>
-                        <td class="d-none d-md-table-cell">{{ product.stock_quantity }}</td>
+                        <td>{{ product.internal_code }}</td>
+                        <td>{{ product.category }}</td>
+                        <td>{{ product.stock_quantity }}</td>
                         <td>
                             <a href="{% url 'warehouse:product_detail' product.id %}" class="btn btn-outline-dark btn-sm">
                                 <i class="fas fa-info-circle"></i>
@@ -80,4 +90,82 @@
         </table>
     </div>
 </div>
+
+<!-- JavaScript per inizializzare DataTables con filtri -->
+<script>
+    $(document).ready(function() {
+        // Funzione per ottenere la data formattata per il nome del file
+        function getFormattedDate() {
+            var date = new Date();
+            var day = String(date.getDate()).padStart(2, '0');
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var year = date.getFullYear();
+            
+            return day + '_' + month + '_' + year;
+        }
+        
+        // Nome del file per l'esportazione
+        var exportFileName = 'magazzino_' + getFormattedDate();
+        
+        // Inizializza DataTables
+        var table = $('#productTable').DataTable({
+            language: {
+                url: "//cdn.datatables.net/plug-ins/1.10.21/i18n/Italian.json"
+            },
+            responsive: true,
+            dom: 'Bfrtip',
+            buttons: [
+                {
+                    extend: 'excel',
+                    text: '<i class="fas fa-file-excel"></i> Excel',
+                    className: 'btn btn-sm btn-outline-dark',
+                    filename: exportFileName,
+                    exportOptions: {
+                        columns: [0, 1, 2, 3] // Esclude la colonna Azioni (indice 4)
+                    }
+                },
+                {
+                    extend: 'pdf',
+                    text: '<i class="fas fa-file-pdf"></i> PDF',
+                    className: 'btn btn-sm btn-outline-dark',
+                    filename: exportFileName,
+                    exportOptions: {
+                        columns: [0, 1, 2, 3] // Esclude la colonna Azioni (indice 4)
+                    },
+                    customize: function(doc) {
+                        // Personalizzazione del PDF
+                        doc.defaultStyle.fontSize = 10;
+                        doc.styles.tableHeader.fontSize = 11;
+                        doc.styles.tableHeader.alignment = 'left';
+                        doc.content[1].table.widths = ['*', '*', '*', '*']; // Larghezze colonne automatiche
+                        
+                        // Aggiunge intestazione con data
+                        doc.content.splice(0, 0, {
+                            text: 'Estratto il ' + new Date().toLocaleDateString('it-IT'),
+                            style: 'subheader',
+                            margin: [0, 0, 0, 10]
+                        });
+                        
+                        // Aggiunge titolo
+                        doc.content.splice(0, 0, {
+                            text: 'Inventario Magazzino',
+                            style: 'header',
+                            alignment: 'center',
+                            margin: [0, 0, 0, 10]
+                        });
+                    }
+                }
+            ],
+            // Ricerca abilitata
+            searching: true,
+            // Configurazione per colonne 
+            columnDefs: [
+                { orderable: false, targets: 4 }, // Disabilita ordinamento per colonna Azioni
+                { responsivePriority: 1, targets: 0 }, // Nome prodotto
+                { responsivePriority: 2, targets: 3 }, // Stock
+                { responsivePriority: 3, targets: 2 }  // Categoria
+            ]
+        });
+    });
+</script>
 {% endblock %}
