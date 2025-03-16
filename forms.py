@@ -44,8 +44,8 @@ class ProductAliasForm(forms.ModelForm):
         widgets = {
             'product': forms.Select(attrs={'class': 'form-select'}),
             'supplier': forms.Select(attrs={'class': 'form-select'}),
-            'alias_name': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Nome Usato dal fornitore'}),
-            'external_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Codice fornitore'}),
+            'alias_name': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Nome ESATTO Usato dal fornitore'}),
+            'external_code': forms.TextInput(attrs={'class': 'form-control', 'placeholder': '(Opz.) Codice fornitore'}),
             'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': '(Opz.) Descrizione del codice fornitore'}),
         }
 

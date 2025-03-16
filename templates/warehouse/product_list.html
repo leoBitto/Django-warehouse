@@ -53,15 +53,6 @@
                         <h5 class="card-title fw-bold">{{ product.name }}</h5>
                         <p class="card-text text-muted">{{ product.description|truncatewords:15 }}</p>
                     </div>
-                    <div class="card-footer bg-white border-0">
-                        <span class="availability {% if product.stock_quantity > 0 %}text-success{% else %}text-danger{% endif %}">
-                            {% if product.stock_quantity > 0 %}
-                                <i class="fas fa-check-circle"></i> Disponibile
-                            {% else %}
-                                <i class="fas fa-times-circle"></i> Non disponibile
-                            {% endif %}
-                        </span>
-                    </div>
                 </div>
             </div>
             {% empty %}
