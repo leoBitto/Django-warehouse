@@ -7,7 +7,7 @@ from warehouse.forms import InventoryUploadForm
 from warehouse.models.base import *
 
 class InventoryUploadView(View):
-    template_name = "warehouse/inventory_upload.html"
+    template_name = "warehouse/backoffice/inventory_upload.html"
     
     def get(self, request):
         form = InventoryUploadForm()
